@@ -1,0 +1,2577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Faculty Course Allocation — Air University Islamabad</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ivory:     #f0ebe0;
+      --parchment: #e8e0d0;
+      --cream:     #f5f0e8;
+      --navy:      #0d1b3e;
+      --navy-mid:  #142254;
+      --navy-lt:   #1c2e6b;
+      --forest:    #1a4230;
+      --gold:      #c9a84c;
+      --gold-lt:   #e2c06a;
+      --gold-dk:   #a07830;
+      --crimson:   #8b1a1a;
+      --teal:      #1a5f5f;
+      --plum:      #4e2060;
+      --amber:     #a05418;
+      --steel:     #3a4560;
+      --border:    #c8bfa8;
+      --border-dk: #a8997c;
+      --text:      #0d0d0d;
+      --text-md:   #2a2a2a;
+      --text-lt:   #5a5040;
+      --shadow:    rgba(13,27,62,.18);
+
+      /* page bg — light warm institutional grey */
+      --page-bg:   #e6e8f0;
+      --page-bg2:  #dcdfe9;
+
+      /* program colors */
+      --ms1:    #1a5f5f;
+      --ms3:    #a05418;
+      --phd:    #4e2060;
+      --ce1:    #0d1b3e;
+      --cephd:  #1a4230;
+    }
+
+    body {
+      background: var(--page-bg);
+      color: var(--text);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 16px;
+      min-height: 100vh;
+    }
+
+    /* Deep navy institutional background with subtle crest-like pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,168,76,.06) 0%, transparent 60%),
+        radial-gradient(ellipse 100% 80% at 100% 100%, rgba(26,39,68,.08) 0%, transparent 60%),
+        linear-gradient(175deg, #e6e8f0 0%, #dcdfe9 50%, #d8dbe6 100%);
+    }
+
+    /* Faint diagonal seal watermark */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: .06;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(26,39,68,.4) 0px,
+        rgba(26,39,68,.4) 1px,
+        transparent 1px,
+        transparent 48px
+      );
+    }
+
+    /* Top rule banner */
+    .top-rule {
+      height: 5px;
+      background: linear-gradient(90deg, var(--gold-dk) 0%, var(--gold) 40%, var(--gold-lt) 70%, var(--gold) 100%);
+      box-shadow: 0 2px 12px rgba(201,168,76,.4);
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* Content area sits on a parchment card lifted over the dark bg */
+    .content-card {
+      background: var(--ivory);
+      border: 1px solid rgba(201,168,76,.25);
+      border-top: none;
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,.1),
+        0 8px 40px rgba(0,0,0,.45),
+        0 2px 8px rgba(0,0,0,.3);
+      padding: 32px 40px 48px;
+      position: relative;
+    }
+    .content-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-dk), var(--gold), var(--gold-lt), var(--gold));
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 40px 36px 28px;
+      margin-bottom: 0;
+      cursor: default;
+      user-select: none;
+      background: linear-gradient(135deg, #0d1b3e 0%, #0f2050 60%, #0a1530 100%);
+      border-bottom: 2px solid var(--gold);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Decorative corner accent */
+    header::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .header-left {}
+
+    .institution {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: var(--gold-lt);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .institution::before {
+      content: '';
+      display: inline-block;
+      width: 28px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(28px, 4vw, 46px);
+      font-weight: 900;
+      line-height: 1.0;
+      color: #ffffff;
+      letter-spacing: -.01em;
+    }
+    header h1 em {
+      font-style: italic;
+      color: var(--gold-lt);
+    }
+
+    .header-sub {
+      font-family: 'EB Garamond', serif;
+      font-size: 14px;
+      color: rgba(240,230,200,.65);
+      margin-top: 6px;
+      font-style: italic;
+      letter-spacing: .02em;
+    }
+
+    .ver-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold-lt);
+      background: rgba(255,255,255,.06);
+      padding: 6px 14px;
+      border: 1px solid rgba(201,168,76,.45);
+      transition: background .3s;
+    }
+    .ver-badge.admin-active {
+      background: var(--crimson);
+      border-color: var(--crimson);
+      color: #fff;
+    }
+
+    /* ── SYNC BAR ── */
+    .sync-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--navy);
+      padding: 9px 16px;
+      margin-bottom: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--text-lt);
+      letter-spacing: .02em;
+    }
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--border-dk);
+      transition: background .3s;
+    }
+    .sync-dot.ok     { background: var(--forest); animation: pulse 2.5s infinite; }
+    .sync-dot.saving { background: var(--gold); }
+    .sync-dot.error  { background: var(--crimson); }
+
+    .admin-badge {
+      display: none;
+      margin-left: auto;
+      background: var(--crimson);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      padding: 3px 10px;
+      text-transform: uppercase;
+      animation: pulse 2s infinite;
+    }
+    .admin-badge.show { display: inline-block; }
+
+    /* ── ADMIN BAR ── */
+    #admin-bar {
+      display: none;
+      background: #fff5f5;
+      border: 1px solid #e8c8c8;
+      border-left: 3px solid var(--crimson);
+      padding: 10px 18px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: var(--crimson);
+      align-items: center;
+      gap: 14px;
+    }
+    body.admin-mode #admin-bar { display: flex; }
+    #admin-bar strong { font-family: 'Playfair Display', serif; font-size: 14px; }
+    #admin-bar span { color: var(--text-lt); font-style: italic; font-size: 13px; }
+    #edit-restrictions-btn {
+      background: var(--navy);
+      color: var(--ivory);
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    #edit-restrictions-btn:hover { background: var(--navy-lt); }
+    #admin-logout {
+      margin-left: auto;
+      background: none;
+      border: 1px solid rgba(139,26,26,.4);
+      color: var(--crimson);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    #admin-logout:hover { background: rgba(139,26,26,.08); }
+
+    /* ── RULES BAR ── */
+    .rules-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+      padding: 16px 20px;
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+    }
+    .rules-title {
+      width: 100%;
+      font-family: 'Playfair Display', serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .rule-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      font-size: 12.5px;
+      color: var(--text-md);
+    }
+    .rdot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .rule-chip strong { font-weight: 600; color: var(--text); }
+
+    /* ── ALERT ── */
+    #alert-box {
+      display: none;
+      padding: 12px 18px;
+      margin-bottom: 22px;
+      font-size: 14px;
+      border-left: 3px solid;
+      line-height: 1.6;
+      animation: slideIn .3s ease;
+    }
+    #alert-box.danger  { background: #fff8f8; border-color: var(--crimson); color: var(--crimson); display: flex; gap: 10px; }
+    #alert-box.success { background: #f4faf6; border-color: var(--forest); color: var(--forest); display: flex; gap: 10px; }
+
+    /* ── SECTION LABEL ── */
+    .step-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .step-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+    .step-num::after {
+      content: '';
+      display: none;
+    }
+    .step-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .step-rule {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── FACULTY BAR ── */
+    .faculty-bar {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--navy);
+      padding: 22px 24px;
+      margin-bottom: 26px;
+    }
+    .faculty-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .faculty-row .sw { flex: 1; }
+
+    /* ── SELECT ── */
+    .sw { position: relative; }
+    .sw::after {
+      content: '▾';
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 12px;
+      color: var(--text-lt);
+    }
+
+    select {
+      width: 100%;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      font-size: 14.5px;
+      padding: 11px 36px 11px 14px;
+      appearance: none;
+      cursor: pointer;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    select:focus {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(26,39,68,.08);
+    }
+    select option { background: #fff; font-family: 'EB Garamond', serif; }
+
+    /* ── PROGRAM SWITCHER ── */
+    .prog-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--text-lt);
+      margin-bottom: 10px;
+    }
+    .prog-label em { color: var(--gold); font-style: normal; margin-right: 6px; }
+
+    .prog-switcher {
+      display: flex;
+      gap: 0;
+      margin-bottom: 22px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+    .prog-btn {
+      background: var(--parchment);
+      border: none;
+      color: var(--text-lt);
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: .03em;
+      padding: 11px 28px;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .prog-btn:not(:last-child) { border-right: 1px solid var(--border); }
+    .prog-btn.active { background: var(--navy); color: var(--ivory); }
+    .prog-btn:not(.active):hover { background: var(--cream); color: var(--navy); }
+
+    .prog-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+      margin-bottom: 2px;
+      flex-shrink: 0;
+      color: inherit;
+    }
+
+    .prog-section { display: none; }
+    .prog-section.active { display: block; }
+
+    /* ── COURSE COLUMNS ── */
+    .course-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    @media (max-width: 780px) { .course-columns { grid-template-columns: 1fr; } }
+
+    .col-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--border-dk);
+      padding: 20px 18px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .col-card:hover { box-shadow: 0 2px 12px var(--shadow); }
+    .col-card.ms1  { border-top-color: var(--ms1); }
+    .col-card.ms3  { border-top-color: var(--ms3); }
+    .col-card.phd  { border-top-color: var(--phd); }
+    .col-card.ce1  { border-top-color: var(--ce1); }
+    .col-card.cephd{ border-top-color: var(--cephd); }
+
+    .col-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+
+    .ctag {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 900;
+      padding: 5px 14px;
+      border: 2px solid;
+    }
+    .ctag.ms1  { background: rgba(26,95,95,.1);   color: var(--ms1);  border-color: rgba(26,95,95,.4); }
+    .ctag.ms3  { background: rgba(160,84,24,.1);  color: var(--ms3);  border-color: rgba(160,84,24,.4); }
+    .ctag.phd  { background: rgba(78,32,96,.1);   color: var(--phd);  border-color: rgba(78,32,96,.4); }
+    .ctag.ce1  { background: rgba(13,27,62,.1);   color: var(--ce1);  border-color: rgba(13,27,62,.4); }
+    .ctag.cephd{ background: rgba(26,66,48,.1);   color: var(--cephd);border-color: rgba(26,66,48,.4); }
+
+    .ctitle {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .csub {
+      font-size: 12px;
+      color: var(--text-lt);
+      margin-bottom: 14px;
+      font-style: italic;
+    }
+
+    /* ── INLINE NOTICE ── */
+    .inline-notice {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      border-left: 3px solid var(--crimson);
+      background: rgba(139,26,26,.05);
+      color: var(--crimson);
+      line-height: 1.5;
+      animation: slideIn .25s ease;
+    }
+    .inline-notice.show { display: block; }
+
+    /* ── SUBMIT BUTTON ── */
+    .btn {
+      background: var(--navy);
+      color: var(--ivory);
+      border: none;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 13.5px;
+      letter-spacing: .04em;
+      padding: 12px 26px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background .2s, transform .1s;
+    }
+    .btn:hover { background: var(--navy-lt); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.danger-btn {
+      background: var(--crimson);
+      margin-left: auto;
+      font-size: 12px;
+      padding: 8px 16px;
+    }
+    .btn.danger-btn:hover { background: #6b1414; }
+
+    /* ── TABLE SECTION ── */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--navy);
+    }
+    .section-title::after { content: none; }
+    .badge {
+      background: var(--navy);
+      color: var(--ivory);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 9px;
+    }
+
+    table { width: 100%; border-collapse: collapse; background: var(--cream); border: 1px solid var(--border); }
+    thead tr { background: var(--navy); }
+    th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(247,244,238,.7);
+      padding: 11px 16px;
+      text-align: left;
+      font-weight: 400;
+    }
+    th:first-child { color: var(--gold-lt); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:hover { background: var(--parchment); }
+    td { padding: 12px 16px; font-size: 14px; }
+    td:first-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-lt);
+      font-size: 11px;
+    }
+    .tf { color: var(--navy); font-weight: 600; font-family: 'EB Garamond', serif; }
+    .tc { color: var(--text-md); }
+    .tt { font-family: 'JetBrains Mono', monospace; color: var(--text-lt); font-size: 11px; }
+    .tcat { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .05em; }
+    .tcat.ms1   { color: var(--ms1); }
+    .tcat.ms3   { color: var(--ms3); }
+    .tcat.phd   { color: var(--phd); }
+    .tcat.ce1   { color: var(--ce1); }
+    .tcat.cephd { color: var(--cephd); }
+
+    .live-dot {
+      display: inline-block;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--forest);
+      margin-right: 8px;
+      animation: pulse 2.5s infinite;
+      vertical-align: middle;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-lt);
+      font-size: 14px;
+      font-style: italic;
+      border: 1px solid var(--border);
+      background: var(--cream);
+    }
+    .empty-icon { font-size: 28px; margin-bottom: 12px; opacity: .3; }
+
+    /* ── DELETE BTN ── */
+    .del-btn {
+      background: none;
+      border: none;
+      color: var(--border-dk);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 3px 7px;
+      display: none;
+      transition: color .15s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .del-btn:hover { color: var(--crimson); }
+    body.admin-mode .del-btn { display: inline-block; }
+    #clear-all-btn { display: none; }
+    body.admin-mode #clear-all-btn { display: inline-flex; }
+
+    /* ── LOADING OVERLAY ── */
+    #loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(247,244,238,.88);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 999; gap: 16px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--navy);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    .loading-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      color: var(--text-lt);
+      font-style: italic;
+      letter-spacing: .04em;
+    }
+
+    /* ── ADMIN MODAL ── */
+    #admin-modal {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(26,39,68,.7); backdrop-filter: blur(3px);
+      align-items: center; justify-content: center;
+    }
+    #admin-modal.open { display: flex; }
+    .modal-box {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--crimson);
+      padding: 36px 40px;
+      width: 100%; max-width: 380px;
+      position: relative;
+      animation: slideIn .2s ease;
+    }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 700;
+      margin-bottom: 5px; color: var(--crimson);
+    }
+    .modal-sub { font-size: 13px; color: var(--text-lt); margin-bottom: 24px; font-style: italic; }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--text-lt); margin-bottom: 8px;
+    }
+    .modal-field input {
+      width: 100%; background: #fff; border: 1px solid var(--border);
+      color: var(--text); font-family: 'EB Garamond', serif; font-size: 15px;
+      padding: 11px 14px; outline: none; transition: border-color .2s;
+    }
+    .modal-field input:focus { border-color: var(--navy); }
+    .modal-field input.shake { animation: shake .35s ease; border-color: var(--crimson); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .modal-btn {
+      flex: 1; padding: 11px; border: none;
+      font-family: 'Playfair Display', serif; font-weight: 700;
+      font-size: 13px; letter-spacing: .03em; cursor: pointer; transition: opacity .15s;
+    }
+    .modal-btn.confirm { background: var(--crimson); color: #fff; }
+    .modal-btn.cancel  { background: var(--parchment); color: var(--text-lt); border: 1px solid var(--border); }
+    .modal-btn:hover { opacity: .85; }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none; color: var(--text-lt);
+      font-size: 16px; cursor: pointer; line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-error { font-size: 12px; color: var(--crimson); margin-top: 8px; min-height: 16px; font-style: italic; }
+    .combo-option {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px; border: 1.5px solid var(--border);
+      border-radius: 8px; cursor: pointer; transition: border-color .2s, background .2s;
+    }
+    .combo-option:hover { border-color: var(--navy); background: #f0f4ff; }
+    .combo-option input[type=radio] { margin-top: 3px; accent-color: var(--navy); width:16px; height:16px; flex-shrink:0; }
+    .combo-option.selected { border-color: var(--navy); background: #eef2ff; }
+    .combo-title { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+    .combo-desc  { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── RESTRICTIONS MODAL ── */
+    #restrictions-modal {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(26,39,68,.7); backdrop-filter: blur(3px);
+      align-items: flex-start; justify-content: center;
+      padding: 20px 16px;
+      overflow-y: auto;
+    }
+    #restrictions-modal.open { display: flex; }
+    .rest-box {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--gold);
+      padding: 24px 28px;
+      width: 100%; max-width: 720px;
+      position: relative;
+      animation: slideIn .2s ease;
+      margin: auto;
+    }
+    .rest-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 700;
+      margin-bottom: 4px; color: var(--navy);
+    }
+    .rest-sub { font-size: 13px; color: var(--text-lt); margin-bottom: 26px; font-style: italic; }
+    .rest-section { margin-bottom: 24px; }
+    .rest-section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .rest-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin-bottom: 14px;
+    }
+    .rest-row:last-child { margin-bottom: 0; }
+    .rest-label { font-size: 13.5px; color: var(--text); flex: 1; line-height: 1.4; }
+    .rest-label small { display: block; font-size: 11px; color: var(--text-lt); margin-top: 2px; font-style: italic; }
+    .rest-control { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .stepper { display: flex; align-items: center; border: 1px solid var(--border); }
+    .stepper button {
+      background: var(--parchment); border: none; color: var(--navy);
+      font-family: 'Playfair Display', serif; font-weight: 700; font-size: 14px;
+      width: 30px; height: 32px; cursor: pointer; transition: background .15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stepper button:hover { background: var(--border); }
+    .stepper input {
+      width: 40px; height: 32px; background: #fff; border: none;
+      border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+      color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      text-align: center; outline: none;
+    }
+    .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+    .toggle { position: relative; width: 42px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      cursor: pointer; transition: background .3s;
+      border-radius: 0;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; bottom: 3px;
+      background: var(--text-lt);
+      transition: transform .3s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--navy); border-color: var(--navy); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--ivory); }
+    .toggle-state {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: .1em; color: var(--text-lt);
+    }
+    .rest-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .rest-btn {
+      flex: 1; padding: 11px; border: none;
+      font-family: 'Playfair Display', serif; font-weight: 700;
+      font-size: 13px; letter-spacing: .03em; cursor: pointer; transition: opacity .15s;
+    }
+    .rest-btn.save  { background: var(--navy); color: var(--ivory); }
+    .rest-btn.close { background: var(--parchment); color: var(--text-lt); border: 1px solid var(--border); }
+    .rest-btn:hover { opacity: .85; }
+    .rest-save-status { font-size: 12px; color: var(--text-lt); min-height: 18px; margin-bottom: 10px; font-style: italic; }
+    .rest-save-status.ok  { color: var(--forest); }
+    .rest-save-status.err { color: var(--crimson); }
+
+    /* ── FOOTER RULE ── */
+    .footer-rule {
+      margin-top: 60px;
+      border-top: 2px solid var(--border);
+      padding-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-left {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--text-lt);
+    }
+    .footer-right {
+      font-family: 'EB Garamond', serif;
+      font-size: 12px;
+      color: var(--text-lt);
+      font-style: italic;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes shake   { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+  </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading Registry Data…</div>
+</div>
+
+<!-- Restrictions Modal -->
+<div id="restrictions-modal" role="dialog" aria-modal="true">
+  <div class="rest-box">
+    <div class="rest-title">Assignment Restrictions</div>
+    <div class="rest-sub">Configure rules governing faculty course assignments.</div>
+
+    <div class="rest-section">
+      <div class="rest-section-title">Course Load per Faculty</div>
+      <div class="rest-row">
+        <div class="rest-label">
+          Maximum courses per faculty member
+          <small>Faculty may take any combination up to this total — all MS, all PhD, or a mix</small>
+        </div>
+        <div class="rest-control">
+          <div class="stepper">
+            <button onclick="stepR('maxTotal',-1)">−</button>
+            <input type="number" id="r-maxTotal" value="2" min="1" max="10" oninput="onStepperChange()"/>
+            <button onclick="stepR('maxTotal',+1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="rest-section-title" style="margin-top:20px;">Allowed Combinations</div>
+      <div class="rest-label" style="margin-bottom:14px;">
+        Valid splits a faculty member may choose, within the total above
+        <small>Each row is one permitted option. Use the steppers to set how many MS and PhD courses form each split.</small>
+      </div>
+
+      <!-- Combination rows -->
+      <div id="combo-rows-wrap">
+        <!-- Row 1 -->
+        <div class="combo-split-row" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:#fff;border:1px solid var(--border);">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-lt);min-width:52px;">Option 1</span>
+          <div style="display:flex;align-items:center;gap:8px;flex:1;">
+            <div class="stepper">
+              <button onclick="stepSplit(0,'ms',-1)">−</button>
+              <input type="number" class="split-ms" value="2" min="0" max="10" oninput="onStepperChange()"/>
+              <button onclick="stepSplit(0,'ms',+1)">+</button>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ms1);font-weight:600;">MS</span>
+            <span style="color:var(--text-lt);font-size:13px;">+</span>
+            <div class="stepper">
+              <button onclick="stepSplit(0,'phd',-1)">−</button>
+              <input type="number" class="split-phd" value="0" min="0" max="10" oninput="onStepperChange()"/>
+              <button onclick="stepSplit(0,'phd',+1)">+</button>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--phd);font-weight:600;">PhD</span>
+          </div>
+          <span class="split-label" style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:var(--navy);min-width:80px;text-align:right;"></span>
+        </div>
+        <!-- Row 2 -->
+        <div class="combo-split-row" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:#fff;border:1px solid var(--border);">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-lt);min-width:52px;">Option 2</span>
+          <div style="display:flex;align-items:center;gap:8px;flex:1;">
+            <div class="stepper">
+              <button onclick="stepSplit(1,'ms',-1)">−</button>
+              <input type="number" class="split-ms" value="0" min="0" max="10" oninput="onStepperChange()"/>
+              <button onclick="stepSplit(1,'ms',+1)">+</button>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ms1);font-weight:600;">MS</span>
+            <span style="color:var(--text-lt);font-size:13px;">+</span>
+            <div class="stepper">
+              <button onclick="stepSplit(1,'phd',-1)">−</button>
+              <input type="number" class="split-phd" value="2" min="0" max="10" oninput="onStepperChange()"/>
+              <button onclick="stepSplit(1,'phd',+1)">+</button>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--phd);font-weight:600;">PhD</span>
+          </div>
+          <span class="split-label" style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:var(--navy);min-width:80px;text-align:right;"></span>
+        </div>
+        <!-- Row 3 -->
+        <div class="combo-split-row" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:#fff;border:1px solid var(--border);">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-lt);min-width:52px;">Option 3</span>
+          <div style="display:flex;align-items:center;gap:8px;flex:1;">
+            <div class="stepper">
+              <button onclick="stepSplit(2,'ms',-1)">−</button>
+              <input type="number" class="split-ms" value="1" min="0" max="10" oninput="onStepperChange()"/>
+              <button onclick="stepSplit(2,'ms',+1)">+</button>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ms1);font-weight:600;">MS</span>
+            <span style="color:var(--text-lt);font-size:13px;">+</span>
+            <div class="stepper">
+              <button onclick="stepSplit(2,'phd',-1)">−</button>
+              <input type="number" class="split-phd" value="1" min="0" max="10" oninput="onStepperChange()"/>
+              <button onclick="stepSplit(2,'phd',+1)">+</button>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--phd);font-weight:600;">PhD</span>
+          </div>
+          <span class="split-label" style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:var(--navy);min-width:80px;text-align:right;"></span>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div id="combo-preview" style="margin-top:4px;padding:10px 14px;background:#f0f4ff;border:1px solid #c7d2fe;font-size:0.84rem;color:#1e3a8a;">
+        📋 <span id="combo-preview-text"></span>
+      </div>
+    </div>
+
+    <div class="rest-section">
+      <div class="rest-section-title">Cluster Limits per Semester (MSEE &amp; PhD EE)</div>
+      <div class="rest-label" style="margin-bottom:10px;font-size:12px;">Max courses per cluster per semester — set 0 to disable</div>
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:center;margin-bottom:4px;padding:0 12px;">
+        <div></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lt);text-align:center;">MSEE Sem 1</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lt);text-align:center;">MSEE Sem 3</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lt);text-align:center;">PhD EE</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin-bottom:6px;">🔋 Power Systems</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('power','ms1',-1)">−</button><input type="number" id="cl-power-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','ms1',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('power','ms3',-1)">−</button><input type="number" id="cl-power-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','ms3',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('power','phd',-1)">−</button><input type="number" id="cl-power-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','phd',+1)">+</button></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--forest);text-transform:uppercase;margin-bottom:6px;">🎛️ Control Systems</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('control','ms1',-1)">−</button><input type="number" id="cl-control-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','ms1',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('control','ms3',-1)">−</button><input type="number" id="cl-control-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','ms3',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('control','phd',-1)">−</button><input type="number" id="cl-control-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','phd',+1)">+</button></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--teal);text-transform:uppercase;margin-bottom:6px;">📡 Communication</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('communication','ms1',-1)">−</button><input type="number" id="cl-communication-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms1',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('communication','ms3',-1)">−</button><input type="number" id="cl-communication-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms3',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('communication','phd',-1)">−</button><input type="number" id="cl-communication-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','phd',+1)">+</button></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--plum);text-transform:uppercase;margin-bottom:6px;">🤖 Machine Learning</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('ml','ms1',-1)">−</button><input type="number" id="cl-ml-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','ms1',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('ml','ms3',-1)">−</button><input type="number" id="cl-ml-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','ms3',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('ml','phd',-1)">−</button><input type="number" id="cl-ml-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','phd',+1)">+</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="rest-section">
+      <div class="rest-section-title">Policy Toggles</div>
+      <div class="rest-row">
+        <div class="rest-label">
+          Allow course re-assignment
+          <small>If enabled, an already-assigned course may be transferred to another faculty member</small>
+        </div>
+        <div class="rest-control toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="r-allowReassign" onchange="onToggleChange()"/>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-state" id="r-allowReassign-state">OFF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rest-save-status" id="rest-save-status"></div>
+    <div class="rest-actions">
+      <button class="rest-btn save" onclick="saveRestrictions()">Save to Database</button>
+      <button class="rest-btn close" onclick="closeRestrictionsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Login Modal -->
+<div id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-text">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAdminModal()" aria-label="Close">✕</button>
+    <div class="modal-title" id="modal-title-text">Administrator Access</div>
+    <div class="modal-sub">Enter the administrator password to unlock edit and delete controls.</div>
+    <div class="modal-field">
+      <label for="admin-pw-input">Password</label>
+      <input type="password" id="admin-pw-input" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')confirmAdmin()"
+             autocomplete="current-password"/>
+    </div>
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeAdminModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmAdmin()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="top-rule"></div>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <header id="main-header" onclick="handleHeaderTap()">
+    <div class="header-left">
+      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:rgba(220,190,110,.95);letter-spacing:.04em;text-transform:none;margin-bottom:10px;">Department of Electrical &amp; Computer Engineering · Air University Islamabad</div>
+      <h1>Faculty <em>Course</em><br>Allocation / Loading</h1>
+      <div class="header-sub">Postgraduate Programme — Course Allocation / Loading System</div>
+    </div>
+  </header>
+
+  <div class="content-card">
+  <!-- Sync status -->
+  <div class="sync-bar" style="margin-top:24px;">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span id="sync-text">Connecting to database…</span>
+    <span class="admin-badge" id="admin-badge">Admin Mode</span>
+  </div>
+
+  <!-- Admin active bar -->
+  <div id="admin-bar">
+    <strong>Administrator Mode Active</strong>
+    <span>— Assignment deletion and modification enabled</span>
+    <button id="edit-restrictions-btn" onclick="openRestrictionsModal()">Edit Restrictions</button>
+    <!-- Override toggle -->
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 12px;border:1px solid rgba(139,26,26,.35);background:rgba(139,26,26,.05);">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--crimson);">Override Limits</span>
+        <span class="toggle" style="width:38px;height:20px;">
+          <input type="checkbox" id="admin-override-toggle" onchange="onAdminOverrideChange()" style="opacity:0;width:0;height:0;"/>
+          <span class="toggle-slider"></span>
+        </span>
+        <span id="admin-override-state" style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--text-lt);">OFF</span>
+      </label>
+    </div>
+    <div id="admin-override-banner" style="display:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:var(--crimson);padding:3px 10px;animation:pulse 2s infinite;">⚡ No Limits</div>
+    <button id="export-excel-btn" onclick="exportToExcel()" style="background:var(--forest);color:var(--ivory);border:none;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;cursor:pointer;transition:background .2s;display:flex;align-items:center;gap:7px;">
+      <svg width="13" height="13" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2" y="2" width="16" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M6 7l2.5 3L6 13M10 13h4M10 7h4M10 10h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Export Excel
+    </button>
+    <button id="admin-logout" onclick="deactivateAdmin()">Lock &amp; Exit</button>
+  </div>
+
+  <!-- Rules -->
+  <div class="rules-bar">
+    <div class="rules-title">Assignment Rules &amp; Constraints</div>
+    <div class="rule-chip"><span class="rdot" style="background:var(--gold)"></span><span id="rule-combo-sentence">Each faculty member may be assigned a maximum of 2 MS and 2 PhD courses.</span></div>
+    <div class="rule-chip"><span class="rdot" style="background:var(--crimson)"></span>Assigned course — <strong id="rule-reassign-label">cannot be re-assigned</strong></div>
+    <div class="rule-chip"><span class="rdot" style="background:var(--ce1)"></span><strong>EE &amp; CE</strong> — separate course lists, identical policies</div>
+  </div>
+
+  <!-- Alert -->
+  <div id="alert-box"><span id="a-icon"></span><span id="a-msg"></span></div>
+
+  <!-- Step 1 -->
+  <div class="step-label">
+    <span class="step-num">Step I</span>
+    <span class="step-title">Select Faculty Member</span>
+    <span class="step-rule"></span>
+  </div>
+  <div class="faculty-bar">
+    <div class="faculty-row">
+      <div class="sw">
+        <select id="sel-faculty" onchange="onFacultyChange()">
+          <option value="">— Select Faculty Member —</option>
+          <option>EE-Engr Dr. ASHIQ HUSSAIN</option>
+          <option>EE-Engr Dr. WASEEM KHAN</option>
+          <option>EE-Engr Dr. SYED AHMED PASHA</option>
+          <option>EE-Engr Dr. IMRAN FARID</option>
+          <option>EE-Engr Dr. SARAH SAEED</option>
+          <option>EE-Engr Dr. MUHAMMAD ZAHEER</option>
+          <option>EE-Engr Dr. AHSAN SARWAR RANA</option>
+          <option>EE-Engr Dr. SHER ALI</option>
+          <option>EE-Engr Dr. ASHFAQ AHMAD</option>
+          <option>EE-Engr Dr. SHAHZAD AHMAD</option>
+          <option>CE-Engr Dr. MUMAJJED UL MUDASSIR</option>
+          <option>CE-Engr Dr. JEHANZEB KHAN</option>
+          <option>CE-Engr Dr. AYESHA SALMAN</option>
+          <option>CE-Engr Dr. HADI ABDULLAH</option>
+          <option>CE-Engr Dr. FAWAD ISLAM KHAN</option>
+        </select>
+      </div>
+      <button class="btn" onclick="submitAssignment()">Submit Allocation</button>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step-label">
+    <span class="step-num">Step II</span>
+    <span class="step-title">Select Programme &amp; Courses — max 2 courses (any combination)</span>
+    <span class="step-rule"></span>
+  </div>
+
+  <!-- Program Switcher -->
+  <div class="prog-label"><em>Programme</em> Choose Department</div>
+  <div class="prog-switcher">
+    <button class="prog-btn active" id="prog-btn-ee" onclick="switchProgram('ee')">
+      <!-- Lightning bolt / EE icon -->
+      <svg class="prog-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Capacitor left plate -->
+        <line x1="4" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Capacitor right plate -->
+        <line x1="7" y1="4" x2="7" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Wire left -->
+        <line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Wire right going to coil -->
+        <line x1="7" y1="10" x2="9" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Inductor coil (3 arcs) -->
+        <path d="M9 10 Q10 7 11 10 Q12 7 13 10 Q14 7 15 10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <!-- Wire after coil -->
+        <line x1="15" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Lightning bolt on top right -->
+        <path d="M17 3 L14.5 7.5 H16.5 L14 12 L18 6.5 H16 Z" fill="currentColor" opacity="0.85"/>
+      </svg>
+      Electrical Engineering
+    </button>
+    <button class="prog-btn" id="prog-btn-ce" onclick="switchProgram('ce')">
+      <!-- Chip / CE icon -->
+      <svg class="prog-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Chip body -->
+        <rect x="5" y="5" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        <!-- Inner die -->
+        <rect x="7.5" y="7.5" width="5" height="5" rx="0.5" stroke="currentColor" stroke-width="1"/>
+        <!-- Pins top -->
+        <line x1="7.5" y1="5" x2="7.5" y2="2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="10"  y1="5" x2="10"  y2="2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="12.5" y1="5" x2="12.5" y2="2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <!-- Pins bottom -->
+        <line x1="7.5" y1="15" x2="7.5" y2="17.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="10"  y1="15" x2="10"  y2="17.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="12.5" y1="15" x2="12.5" y2="17.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <!-- Pins left -->
+        <line x1="5" y1="7.5" x2="2.5" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="5" y1="12.5" x2="2.5" y2="12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <!-- Pins right -->
+        <line x1="15" y1="7.5" x2="17.5" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="15" y1="12.5" x2="17.5" y2="12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      Computer Engineering
+    </button>
+  </div>
+
+  <!-- EE Section -->
+  <div class="prog-section active" id="prog-ee">
+    <div class="course-columns">
+
+      <!-- MSEE Sem 1 -->
+      <div class="col-card ms1">
+        <div class="col-head"><span class="ctag ms1">MSEE</span><span class="ctitle">Semester 1</span></div>
+
+        <!-- Compulsory -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--crimson);margin-bottom:6px;">Compulsory</div>
+        <div style="margin-bottom:14px;">
+          <div class="sw">
+            <select id="sel-ms1-comp" onchange="onMS1CompulsoryChange()">
+              <option value="">— Select Compulsory Course —</option>
+              <option value="MSEE1 — Linear Systems">MSEE1 — Linear Systems</option>
+              <option value="MSEE1 — Stochastic Processes">MSEE1 — Stochastic Processes</option>
+            </select>
+          </div>
+          <div class="inline-notice" id="notice-ms1-comp"></div>
+        </div>
+
+        <!-- Divider -->
+        <div style="border-top:1px solid var(--border);margin-bottom:12px;"></div>
+
+        <!-- Elective -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ms1);margin-bottom:6px;">Elective</div>
+        <div class="sw">
+          <select id="sel-ms1" onchange="onMSChange('ms1')">
+            <option value="">— Select Course —</option>
+            <optgroup label="⚡ ELECTROMAGNETICS &amp; PHOTONICS">
+              <option data-cluster="power">EE-611 — Electromagnetic Fields</option>
+              <option data-cluster="power">EE-613 — Advanced Optics</option>
+              <option data-cluster="power">EE-614 — Optical Simulation Methods</option>
+              <option data-cluster="power">EE-615 — Antenna Systems</option>
+              <option data-cluster="power">EE-711 — Array Signal Processing</option>
+              <option data-cluster="power">EE-712 — Detection and Estimation Theory</option>
+              <option data-cluster="power">EE-713 — Radar Engineering</option>
+              <option data-cluster="power">EE-714 — Electromagnetic Engineering</option>
+              <option data-cluster="power">EE-715 — Computational Methods of Field Theory</option>
+              <option data-cluster="power">EE-721 — Semiconductor Optoelectronic Devices</option>
+              <option data-cluster="power">EE-722 — Integrated Photonics Circuits Design</option>
+              <option data-cluster="power">EE-725 — Micro and Nano Fabrication Techniques</option>
+              <option data-cluster="power">EE-630 — Intelligent Antenna Systems</option>
+              <option data-cluster="power">EE-716 — Advanced Microwave Engineering</option>
+              <option data-cluster="power">EE-717 — Antennas for 5G and Beyond</option>
+            </optgroup>
+            <optgroup label="📡 COMMUNICATION &amp; SIGNAL PROCESSING">
+              <option data-cluster="communication">EE-632 — Adaptive Filters</option>
+              <option data-cluster="communication">EE-633 — Advanced Digital Communications I</option>
+              <option data-cluster="communication">EE-634 — Advanced Coding Theory</option>
+              <option data-cluster="communication">EE-635 — Satellite Communications</option>
+              <option data-cluster="communication">EE-636 — Advanced Mobile Communications</option>
+              <option data-cluster="communication">EE-637 — Lasers and Optical Sources</option>
+              <option data-cluster="communication">EE-638 — Photo-detectors</option>
+              <option data-cluster="communication">EE-731 — Optimization Techniques</option>
+              <option data-cluster="communication">EE-732 — Advanced Digital Communications II</option>
+              <option data-cluster="communication">EE-733 — Information Theory</option>
+              <option data-cluster="communication">EE-734 — Multimedia Communications</option>
+              <option data-cluster="communication">EE-735 — Optical Waveguide Design</option>
+              <option data-cluster="communication">EE-726 — Telecommunication &amp; Switching Principles</option>
+              <option data-cluster="communication">EE-618 — Digital Telephony</option>
+              <option data-cluster="communication">EE-619 — Telecommunication Network Management</option>
+              <option data-cluster="communication">EE-623 — Wireless Sensor Networks</option>
+            </optgroup>
+            <optgroup label="🔋 POWER SYSTEMS">
+              <option data-cluster="power">EE-656 — Advanced Power Electronics</option>
+              <option data-cluster="power">EE-659 — Power Systems Component Modelling</option>
+              <option data-cluster="power">EE-751 — Power Electronics for Power Systems</option>
+              <option data-cluster="power">EE-760 — Advanced High Voltage Engineering and Breakdown Theory</option>
+              <option data-cluster="power">EE-761 — Power System State Estimation</option>
+            </optgroup>
+            <optgroup label="🎛️ CONTROL SYSTEMS">
+              <option data-cluster="control">EE-652 — Digital Control Systems</option>
+              <option data-cluster="control">EE-653 — System Identification</option>
+              <option data-cluster="control">EE-654 — Adaptive Control</option>
+              <option data-cluster="control">EE-655 — Real-Time Control</option>
+              <option data-cluster="control">EE-657 — Evolutionary Engineering Optimization</option>
+              <option data-cluster="control">EE-752 — Advanced Neural Networks</option>
+              <option data-cluster="control">EE-753 — Intelligent Control</option>
+              <option data-cluster="control">EE-754 — Advanced Robotics and Control</option>
+              <option data-cluster="control">EE-755 — Optimal Control</option>
+              <option data-cluster="control">EE-756 — Robust Control</option>
+              <option data-cluster="control">EE-757 — Sliding Mode Control</option>
+              <option data-cluster="control">EE-758 — Dynamics and Controls of Electrical Machines</option>
+              <option data-cluster="control">EE-759 — Special Topics in Intelligent Systems and Control</option>
+            </optgroup>
+            <optgroup label="🤖 MACHINE LEARNING &amp; IMAGE PROCESSING">
+              <option data-cluster="ml">EE-671 — Digital Image Processing</option>
+              <option data-cluster="ml">EE-672 — Data Mining</option>
+              <option data-cluster="ml">EE-673 — Advanced Digital Image Processing</option>
+              <option data-cluster="ml">EE-771 — Pattern Recognition</option>
+              <option data-cluster="ml">EE-723 — Signal Processing for Machine Learning</option>
+              <option data-cluster="ml">EE-772 — Machine Learning</option>
+              <option data-cluster="ml">EE-773 — Computer Vision</option>
+              <option data-cluster="ml">EE-774 — Medical Imaging</option>
+              <option data-cluster="ml">EE-775 — Satellite Imaging</option>
+              <option data-cluster="ml">EE-776 — Visual Perception</option>
+              <option data-cluster="ml">EE-777 — Compressive Sensing</option>
+              <option data-cluster="ml">EE-778 — Graphical Models</option>
+              <option data-cluster="ml">EE-779 — Computational Intelligence</option>
+              <option data-cluster="ml">EE-781 — Advanced Computer Architecture</option>
+              <option data-cluster="ml">EE-782 — Advanced Operating Systems</option>
+              <option data-cluster="ml">EE-783 — High Performance Scientific Computing</option>
+              <option data-cluster="ml">EE-718 — Internet of Things and Smart Systems</option>
+              <option data-cluster="ml">EE-719 — Parallel Computing</option>
+              <option data-cluster="ml">EE-720 — Advanced Computer Networks</option>
+              <option data-cluster="ml">EE-621 — Internet Architectures and Protocols</option>
+              <option data-cluster="ml">EE-784 — Cyber-Physical Systems Modelling</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="inline-notice" id="notice-ms1"></div>
+      </div>
+
+      <!-- MSEE Sem 3 -->
+      <div class="col-card ms3">
+        <div class="col-head"><span class="ctag ms3">MSEE</span><span class="ctitle">Semester 3</span></div>
+
+        <!-- Compulsory -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--crimson);margin-bottom:6px;">Compulsory</div>
+        <div style="margin-bottom:14px;">
+          <div class="sw">
+            <select id="sel-ms3-rm" onchange="onRMChange()">
+              <option value="">— Select Compulsory Course —</option>
+              <option value="MSEE3 — Research Methodology">MSEE3 — Research Methodology</option>
+            </select>
+          </div>
+          <div class="inline-notice" id="notice-ms3-rm"></div>
+        </div>
+
+        <!-- Divider -->
+        <div style="border-top:1px solid var(--border);margin-bottom:12px;"></div>
+
+        <!-- Elective -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ms3);margin-bottom:6px;">Elective</div>
+        <div class="sw">
+          <select id="sel-ms3" onchange="onMSChange('ms3')">
+            <option value="">— Select Course —</option>
+            <optgroup label="⚡ ELECTROMAGNETICS &amp; PHOTONICS">
+              <option data-cluster="power">EE-611 — Electromagnetic Fields</option>
+              <option data-cluster="power">EE-613 — Advanced Optics</option>
+              <option data-cluster="power">EE-614 — Optical Simulation Methods</option>
+              <option data-cluster="power">EE-615 — Antenna Systems</option>
+              <option data-cluster="power">EE-711 — Array Signal Processing</option>
+              <option data-cluster="power">EE-712 — Detection and Estimation Theory</option>
+              <option data-cluster="power">EE-713 — Radar Engineering</option>
+              <option data-cluster="power">EE-714 — Electromagnetic Engineering</option>
+              <option data-cluster="power">EE-715 — Computational Methods of Field Theory</option>
+              <option data-cluster="power">EE-721 — Semiconductor Optoelectronic Devices</option>
+              <option data-cluster="power">EE-722 — Integrated Photonics Circuits Design</option>
+              <option data-cluster="power">EE-725 — Micro and Nano Fabrication Techniques</option>
+              <option data-cluster="power">EE-630 — Intelligent Antenna Systems</option>
+              <option data-cluster="power">EE-716 — Advanced Microwave Engineering</option>
+              <option data-cluster="power">EE-717 — Antennas for 5G and Beyond</option>
+            </optgroup>
+            <optgroup label="📡 COMMUNICATION &amp; SIGNAL PROCESSING">
+              <option data-cluster="communication">EE-632 — Adaptive Filters</option>
+              <option data-cluster="communication">EE-633 — Advanced Digital Communications I</option>
+              <option data-cluster="communication">EE-634 — Advanced Coding Theory</option>
+              <option data-cluster="communication">EE-635 — Satellite Communications</option>
+              <option data-cluster="communication">EE-636 — Advanced Mobile Communications</option>
+              <option data-cluster="communication">EE-637 — Lasers and Optical Sources</option>
+              <option data-cluster="communication">EE-638 — Photo-detectors</option>
+              <option data-cluster="communication">EE-731 — Optimization Techniques</option>
+              <option data-cluster="communication">EE-732 — Advanced Digital Communications II</option>
+              <option data-cluster="communication">EE-733 — Information Theory</option>
+              <option data-cluster="communication">EE-734 — Multimedia Communications</option>
+              <option data-cluster="communication">EE-735 — Optical Waveguide Design</option>
+              <option data-cluster="communication">EE-726 — Telecommunication &amp; Switching Principles</option>
+              <option data-cluster="communication">EE-618 — Digital Telephony</option>
+              <option data-cluster="communication">EE-619 — Telecommunication Network Management</option>
+              <option data-cluster="communication">EE-623 — Wireless Sensor Networks</option>
+            </optgroup>
+            <optgroup label="🔋 POWER SYSTEMS">
+              <option data-cluster="power">EE-656 — Advanced Power Electronics</option>
+              <option data-cluster="power">EE-659 — Power Systems Component Modelling</option>
+              <option data-cluster="power">EE-751 — Power Electronics for Power Systems</option>
+              <option data-cluster="power">EE-760 — Advanced High Voltage Engineering and Breakdown Theory</option>
+              <option data-cluster="power">EE-761 — Power System State Estimation</option>
+            </optgroup>
+            <optgroup label="🎛️ CONTROL SYSTEMS">
+              <option data-cluster="control">EE-652 — Digital Control Systems</option>
+              <option data-cluster="control">EE-653 — System Identification</option>
+              <option data-cluster="control">EE-654 — Adaptive Control</option>
+              <option data-cluster="control">EE-655 — Real-Time Control</option>
+              <option data-cluster="control">EE-657 — Evolutionary Engineering Optimization</option>
+              <option data-cluster="control">EE-752 — Advanced Neural Networks</option>
+              <option data-cluster="control">EE-753 — Intelligent Control</option>
+              <option data-cluster="control">EE-754 — Advanced Robotics and Control</option>
+              <option data-cluster="control">EE-755 — Optimal Control</option>
+              <option data-cluster="control">EE-756 — Robust Control</option>
+              <option data-cluster="control">EE-757 — Sliding Mode Control</option>
+              <option data-cluster="control">EE-758 — Dynamics and Controls of Electrical Machines</option>
+              <option data-cluster="control">EE-759 — Special Topics in Intelligent Systems and Control</option>
+            </optgroup>
+            <optgroup label="🤖 MACHINE LEARNING &amp; IMAGE PROCESSING">
+              <option data-cluster="ml">EE-671 — Digital Image Processing</option>
+              <option data-cluster="ml">EE-672 — Data Mining</option>
+              <option data-cluster="ml">EE-673 — Advanced Digital Image Processing</option>
+              <option data-cluster="ml">EE-771 — Pattern Recognition</option>
+              <option data-cluster="ml">EE-723 — Signal Processing for Machine Learning</option>
+              <option data-cluster="ml">EE-772 — Machine Learning</option>
+              <option data-cluster="ml">EE-773 — Computer Vision</option>
+              <option data-cluster="ml">EE-774 — Medical Imaging</option>
+              <option data-cluster="ml">EE-775 — Satellite Imaging</option>
+              <option data-cluster="ml">EE-776 — Visual Perception</option>
+              <option data-cluster="ml">EE-777 — Compressive Sensing</option>
+              <option data-cluster="ml">EE-778 — Graphical Models</option>
+              <option data-cluster="ml">EE-779 — Computational Intelligence</option>
+              <option data-cluster="ml">EE-781 — Advanced Computer Architecture</option>
+              <option data-cluster="ml">EE-782 — Advanced Operating Systems</option>
+              <option data-cluster="ml">EE-783 — High Performance Scientific Computing</option>
+              <option data-cluster="ml">EE-718 — Internet of Things and Smart Systems</option>
+              <option data-cluster="ml">EE-719 — Parallel Computing</option>
+              <option data-cluster="ml">EE-720 — Advanced Computer Networks</option>
+              <option data-cluster="ml">EE-621 — Internet Architectures and Protocols</option>
+              <option data-cluster="ml">EE-784 — Cyber-Physical Systems Modelling</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="inline-notice" id="notice-ms3"></div>
+      </div>
+
+      <!-- PhD EE -->
+      <div class="col-card phd">
+        <div class="col-head"><span class="ctag phd">PhD EE</span><span class="ctitle">Semester 1</span></div>
+        <div class="sw">
+          <select id="sel-phd" onchange="onPhdChange()">
+            <option value="">— Select Course —</option>
+            <optgroup label="⚡ ELECTROMAGNETICS &amp; PHOTONICS">
+              <option data-cluster="power">EE-611 — Electromagnetic Fields</option>
+              <option data-cluster="power">EE-613 — Advanced Optics</option>
+              <option data-cluster="power">EE-614 — Optical Simulation Methods</option>
+              <option data-cluster="power">EE-615 — Antenna Systems</option>
+              <option data-cluster="power">EE-711 — Array Signal Processing</option>
+              <option data-cluster="power">EE-712 — Detection and Estimation Theory</option>
+              <option data-cluster="power">EE-713 — Radar Engineering</option>
+              <option data-cluster="power">EE-714 — Electromagnetic Engineering</option>
+              <option data-cluster="power">EE-715 — Computational Methods of Field Theory</option>
+              <option data-cluster="power">EE-721 — Semiconductor Optoelectronic Devices</option>
+              <option data-cluster="power">EE-722 — Integrated Photonics Circuits Design</option>
+              <option data-cluster="power">EE-725 — Micro and Nano Fabrication Techniques</option>
+              <option data-cluster="power">EE-811 — Advanced Array Signal Processing</option>
+              <option data-cluster="power">EE-813 — Advanced Detection and Estimation Theory</option>
+              <option data-cluster="power">EE-814 — Kalman Filters</option>
+              <option data-cluster="power">EE-817 — Special Topics in Photonics</option>
+              <option data-cluster="power">EE-818 — Special Topics in Lasers and Optics</option>
+              <option data-cluster="power">EE-819 — Special Topics in Radar Systems Engineering</option>
+              <option data-cluster="power">EE-630 — Intelligent Antenna Systems</option>
+              <option data-cluster="power">EE-716 — Advanced Microwave Engineering</option>
+              <option data-cluster="power">EE-717 — Antennas for 5G and Beyond</option>
+            </optgroup>
+            <optgroup label="📡 COMMUNICATION &amp; SIGNAL PROCESSING">
+              <option data-cluster="communication">EE-632 — Adaptive Filters</option>
+              <option data-cluster="communication">EE-633 — Advanced Digital Communications I</option>
+              <option data-cluster="communication">EE-634 — Advanced Coding Theory</option>
+              <option data-cluster="communication">EE-635 — Satellite Communications</option>
+              <option data-cluster="communication">EE-636 — Advanced Mobile Communications</option>
+              <option data-cluster="communication">EE-637 — Lasers and Optical Sources</option>
+              <option data-cluster="communication">EE-638 — Photo-detectors</option>
+              <option data-cluster="communication">EE-731 — Optimization Techniques</option>
+              <option data-cluster="communication">EE-732 — Advanced Digital Communications II</option>
+              <option data-cluster="communication">EE-733 — Information Theory</option>
+              <option data-cluster="communication">EE-734 — Multimedia Communications</option>
+              <option data-cluster="communication">EE-735 — Optical Waveguide Design</option>
+              <option data-cluster="communication">EE-831 — Advanced Wireless Techniques</option>
+              <option data-cluster="communication">EE-832 — Space-Time Coding</option>
+              <option data-cluster="communication">EE-833 — Adaptive Wireless Transceivers</option>
+              <option data-cluster="communication">EE-834 — Statistical Signal Processing</option>
+              <option data-cluster="communication">EE-838 — Special Topics in Signal Processing</option>
+              <option data-cluster="communication">EE-839 — Special Topics in Digital Communication Systems</option>
+              <option data-cluster="communication">EE-726 — Telecommunication &amp; Switching Principles</option>
+              <option data-cluster="communication">EE-827 — Advance Optical Fiber Communication</option>
+              <option data-cluster="communication">EE-618 — Digital Telephony</option>
+              <option data-cluster="communication">EE-619 — Telecommunication Network Management</option>
+              <option data-cluster="communication">EE-623 — Wireless Sensor Networks</option>
+              <option data-cluster="communication">EE-815 — Advanced Topics in Wireless Networks</option>
+            </optgroup>
+            <optgroup label="🔋 POWER SYSTEMS">
+              <option data-cluster="power">EE-656 — Advanced Power Electronics</option>
+              <option data-cluster="power">EE-659 — Power Systems Component Modelling</option>
+              <option data-cluster="power">EE-751 — Power Electronics for Power Systems</option>
+              <option data-cluster="power">EE-760 — Advanced High Voltage Engineering and Breakdown Theory</option>
+              <option data-cluster="power">EE-761 — Power System State Estimation</option>
+              <option data-cluster="power">EE-853 — Power System Operation and Protections</option>
+              <option data-cluster="power">EE-858 — Special Topics in Power and Control</option>
+              <option data-cluster="power">EE-860 — Renewable Power Production and Transportation</option>
+            </optgroup>
+            <optgroup label="🎛️ CONTROL SYSTEMS">
+              <option data-cluster="control">EE-652 — Digital Control Systems</option>
+              <option data-cluster="control">EE-653 — System Identification</option>
+              <option data-cluster="control">EE-654 — Adaptive Control</option>
+              <option data-cluster="control">EE-655 — Real-Time Control</option>
+              <option data-cluster="control">EE-657 — Evolutionary Engineering Optimization</option>
+              <option data-cluster="control">EE-752 — Advanced Neural Networks</option>
+              <option data-cluster="control">EE-753 — Intelligent Control</option>
+              <option data-cluster="control">EE-754 — Advanced Robotics and Control</option>
+              <option data-cluster="control">EE-755 — Optimal Control</option>
+              <option data-cluster="control">EE-756 — Robust Control</option>
+              <option data-cluster="control">EE-757 — Sliding Mode Control</option>
+              <option data-cluster="control">EE-758 — Dynamics and Controls of Electrical Machines</option>
+              <option data-cluster="control">EE-759 — Special Topics in Intelligent Systems and Control</option>
+              <option data-cluster="control">EE-851 — Nonlinear Systems &amp; Control</option>
+              <option data-cluster="control">EE-852 — Advanced Process Control</option>
+              <option data-cluster="control">EE-854 — Advanced Topics in Nature Inspired Optimization Techniques</option>
+              <option data-cluster="control">EE-855 — Advanced Topics in Intelligent Systems and Control</option>
+              <option data-cluster="control">EE-856 — Neuro-Fuzzy Control</option>
+              <option data-cluster="control">EE-857 — Stochastic Control</option>
+              <option data-cluster="control">EE-859 — Special Topics in Control Systems</option>
+            </optgroup>
+            <optgroup label="🤖 MACHINE LEARNING &amp; IMAGE PROCESSING">
+              <option data-cluster="ml">EE-671 — Digital Image Processing</option>
+              <option data-cluster="ml">EE-672 — Data Mining</option>
+              <option data-cluster="ml">EE-673 — Advanced Digital Image Processing</option>
+              <option data-cluster="ml">EE-771 — Pattern Recognition</option>
+              <option data-cluster="ml">EE-723 — Signal Processing for Machine Learning</option>
+              <option data-cluster="ml">EE-772 — Machine Learning</option>
+              <option data-cluster="ml">EE-773 — Computer Vision</option>
+              <option data-cluster="ml">EE-774 — Medical Imaging</option>
+              <option data-cluster="ml">EE-775 — Satellite Imaging</option>
+              <option data-cluster="ml">EE-776 — Visual Perception</option>
+              <option data-cluster="ml">EE-777 — Compressive Sensing</option>
+              <option data-cluster="ml">EE-778 — Graphical Models</option>
+              <option data-cluster="ml">EE-779 — Computational Intelligence</option>
+              <option data-cluster="ml">EE-781 — Advanced Computer Architecture</option>
+              <option data-cluster="ml">EE-782 — Advanced Operating Systems</option>
+              <option data-cluster="ml">EE-783 — High Performance Scientific Computing</option>
+              <option data-cluster="ml">EE-871 — Special Topics in Pattern Recognition</option>
+              <option data-cluster="ml">EE-872 — Special Topics in Signal and Image Processing</option>
+              <option data-cluster="ml">EE-873 — Special Topics in Machine Learning</option>
+              <option data-cluster="ml">EE-874 — Advanced Computer Vision</option>
+              <option data-cluster="ml">EE-884 — Parallel Computer Architecture</option>
+              <option data-cluster="ml">EE-718 — Internet of Things and Smart Systems</option>
+              <option data-cluster="ml">EE-719 — Parallel Computing</option>
+              <option data-cluster="ml">EE-720 — Advanced Computer Networks</option>
+              <option data-cluster="ml">EE-621 — Internet Architectures and Protocols</option>
+              <option data-cluster="ml">EE-820 — Selected Topics in Internet of Things (IoT)</option>
+              <option data-cluster="ml">EE-784 — Cyber-Physical Systems Modelling</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="inline-notice" id="notice-phd"></div>
+      </div>
+
+    </div>
+    <div id="ee-cluster-status" style="display:none;margin:10px 4px 0;padding:10px 14px;border-radius:8px;background:#fff8e1;border:1px solid #f9a825;font-size:0.84rem;color:#5a4000;">
+      🔒 <strong id="ee-cluster-name"></strong> cluster is locked and assigned to <strong id="ee-cluster-owner"></strong>. All faculty must select courses from this cluster only.
+    </div>
+  </div>
+
+  <!-- CE Section -->
+  <div class="prog-section" id="prog-ce">
+    <div class="course-columns">
+      <div class="col-card ce1">
+        <div class="col-head"><span class="ctag ce1">MSCE</span><span class="ctitle">Semester 1</span></div>
+
+        <!-- Compulsory -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--crimson);margin-bottom:6px;">Compulsory</div>
+        <div style="margin-bottom:14px;">
+          <div class="sw">
+            <select id="sel-ce1-comp" onchange="onCE1CompulsoryChange()">
+              <option value="">— Select Compulsory Course —</option>
+              <option value="MSCE1 — Advanced Digital System Design">CE-612 — Advanced Digital System Design</option>
+              <option value="MSCE1 — Embedded Systems">CE-613 — Embedded Systems</option>
+            </select>
+          </div>
+          <div class="inline-notice" id="notice-ce1-comp"></div>
+        </div>
+
+        <!-- Divider -->
+        <div style="border-top:1px solid var(--border);margin-bottom:12px;"></div>
+
+        <!-- Elective -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ce1);margin-bottom:6px;">Elective</div>
+        <div class="sw">
+          <select id="sel-ce1" onchange="onCEMSChange('ce1')">
+            <option value="">— Select Course —</option>
+            <option>CE-636 — Advanced Digital Signal Processing</option>
+            <option>CE-712 — Parallel Processing &amp; Distributed Systems</option>
+            <option>CE-619 — Adaptive Control</option>
+            <option>CE-631 — Stochastic Processes</option>
+            <option>CE-722 — Software Development Methodologies</option>
+            <option>CE-742 — Machine Learning</option>
+            <option>CE-713 — DSP Hardware System Design</option>
+            <option>CE-632 — Microelectronics</option>
+            <option>CE-614 — Adaptive Control</option>
+            <option>CE-734 — Adaptive Signal Processing</option>
+            <option>CE-735 — Adaptive Techniques for Wireless Communication</option>
+            <option>CE-724 — Image Processing For Intelligent Systems</option>
+            <option>CE-714 — Machine Vision</option>
+            <option>CE-743 — Artificial Neural Network</option>
+            <option>CE-637 — Computer Network</option>
+            <option>CE-725 — Pattern Recognition &amp; Analysis</option>
+            <option>CE-616 — Computer Vision</option>
+            <option>CE-753 — Detection and Estimation Theory</option>
+            <option>CE-645 — Digital Image Processing</option>
+            <option>CE-747 — Network Switching &amp; Routing</option>
+            <option>CE-638 — Design of Computer Communication Networks</option>
+            <option>CE-746 — Natural Language Processing</option>
+            <option>CE-737 — Cloud Computing</option>
+            <option>CE-647 — Data Mining</option>
+            <option>CE-648 — Deep Learning</option>
+            <option>CE-718 — IOT and Smart Systems</option>
+            <option>CE-699 — Human Computer Interface</option>
+            <option>CE-738 — Wireless Sensor Network</option>
+          </select>
+        </div>
+        <div class="inline-notice" id="notice-ce1"></div>
+      </div>
+
+      <div class="col-card cephd">
+        <div class="col-head"><span class="ctag cephd">PhD CE</span><span class="ctitle">Semester 1</span></div>
+        <div class="sw">
+          <select id="sel-cephd" onchange="onCEPhdChange()">
+            <option value="">— Select Course —</option>
+            <option>CE-821 — Advanced Operating System</option>
+            <option>CE-830 — Advanced Digital Communication</option>
+            <option>CE-820 — Advanced Software Engineering</option>
+            <option>CE-831 — Selected Topics In Computer Networks</option>
+            <option>CE-823 — Advanced Object Oriented Analysis and Design</option>
+            <option>CE-815 — Advanced Embedded Systems</option>
+            <option>CE-826 — Advanced Pattern Recognition</option>
+            <option>CE-816 — Advanced Topics in Computer Vision</option>
+            <option>CE-819 — Selected Topics in IOTs</option>
+            <option>CE-836 — Advanced Wireless Communication</option>
+            <option>CE-851 — Advanced Engineering Mathematics</option>
+            <option>CE-852 — Advanced Numerical Analysis</option>
+            <option>CE-855 — Special Topics in Robotics</option>
+            <option>CE-636 — Advanced Digital Signal Processing</option>
+            <option>CE-712 — Parallel Processing &amp; Distributed Systems</option>
+            <option>CE-619 — Adaptive Control</option>
+            <option>CE-631 — Stochastic Processes</option>
+            <option>CE-722 — Software Development Methodologies</option>
+            <option>CE-832 — Advanced Computer Networks</option>
+            <option>CE-833 — Advanced Topics In Wireless Networks</option>
+            <option>CE-742 — Machine Learning</option>
+            <option>CE-713 — DSP Hardware System Design</option>
+            <option>CE-632 — Microelectronics</option>
+            <option>CE-614 — Adaptive Control</option>
+            <option>CE-734 — Adaptive Signal Processing</option>
+            <option>CE-735 — Adaptive Techniques for Wireless Communication</option>
+            <option>CE-724 — Image Processing For Intelligent Systems</option>
+            <option>CE-714 — Machine Vision</option>
+            <option>CE-743 — Artificial Neural Network</option>
+            <option>CE-637 — Computer Network</option>
+            <option>CE-725 — Pattern Recognition &amp; Analysis</option>
+            <option>CE-616 — Computer Vision</option>
+            <option>CE-753 — Detection and Estimation Theory</option>
+            <option>CE-645 — Digital Image Processing</option>
+            <option>CE-747 — Network Switching &amp; Routing</option>
+            <option>CE-638 — Design of Computer Communication Networks</option>
+            <option>CE-746 — Natural Language Processing</option>
+            <option>CE-737 — Cloud Computing</option>
+            <option>CE-647 — Data Mining</option>
+            <option>CE-648 — Deep Learning</option>
+            <option>CE-718 — IOT and Smart Systems</option>
+            <option>CE-699 — Human Computer Interface</option>
+            <option>CE-738 — Wireless Sensor Network</option>
+          </select>
+        </div>
+        <div class="inline-notice" id="notice-cephd"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignments Table -->
+  <div class="section-title">
+    Assigned Courses <span class="badge" id="count">0</span>
+    <button id="clear-all-btn" class="btn danger-btn" onclick="clearAllAssignments()">Clear All Records</button>
+  </div>
+  <div id="empty" class="empty">
+    <div class="empty-icon">📋</div>
+    No assignments have been recorded.
+  </div>
+  <table id="tbl" style="display:none">
+    <thead>
+      <tr><th>#</th><th>Faculty Member</th><th>Course</th><th>Category</th><th>Assigned</th><th></th></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <!-- Footer -->
+  <div class="footer-rule">
+    <span class="footer-left">Department of Electrical &amp; Computer Engineering · Air University Islamabad</span>
+    <span class="footer-right">Postgraduate Programme Administration</span>
+  </div>
+
+  </div><!-- /content-card -->
+
+</div>
+
+<script>
+  /* ── FIREBASE ── */
+  const firebaseConfig = {
+    apiKey: "AIzaSyBGoySuXhML5IU_-tbZQp4c4O_ancQfABQ",
+    authDomain: "aupgc-8b57b.firebaseapp.com",
+    projectId: "aupgc-8b57b",
+    storageBucket: "aupgc-8b57b.firebasestorage.app",
+    messagingSenderId: "109588130698",
+    appId: "1:109588130698:web:ce30fa64877b3c1f18f673",
+    measurementId: "G-RXKD8X2GF2"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const COL = 'faculty-assignments-v1';
+  const SETTINGS_DOC = 'settings/restrictions';
+
+  // maxTotal = total courses allowed; splits = array of {ms,phd} valid combinations
+  // clusterLimits = { power:{ms1,ms3,phd}, communication:{ms1,ms3,phd}, ml:{ms1,ms3,phd} }
+  const DEFAULT_CLUSTER_LIMITS = {
+    power:         { ms1: 2, ms3: 2, phd: 2 },
+    control:       { ms1: 2, ms3: 2, phd: 2 },
+    communication: { ms1: 2, ms3: 2, phd: 2 },
+    ml:            { ms1: 2, ms3: 2, phd: 2 },
+  };
+  let restrictions = {
+    maxTotal: 2,
+    splits: [ {ms:2,phd:0}, {ms:0,phd:2}, {ms:1,phd:1} ],
+    allowReassign: false,
+    clusterLimits: JSON.parse(JSON.stringify(DEFAULT_CLUSTER_LIMITS)),
+  };
+  const ADMIN_PASSWORD = 'admin1234';
+  const LABEL = {
+    ms1:'MSEE Sem 1', ms3:'MSEE Sem 3', phd:'PhD EE Sem 1',
+    ce1:'MSCE Sem 1',  ce3:'MSCE Sem 3',  cephd:'PhD CE Sem 1',
+    'ms3-rm':'MSEE Sem 3 — Research Methodology (Compulsory)',
+    'ms1-ls':'MSEE Sem 1 — Linear Systems (Compulsory)',
+    'ms1-sp':'MSEE Sem 1 — Stochastic Processes (Compulsory)',
+    'ms1-comp':'MSEE Sem 1 — Compulsory',
+    'ce1-comp':'MSCE Sem 1 — Compulsory'
+  };
+
+  let assignments  = [];
+  let courseOwners = {};
+  let facultySlots = {};
+
+  // Maps each EE course value to its cluster
+  const COURSE_CLUSTER = {
+    // Electromagnetics & Photonics
+    'EE-611 — Electromagnetic Fields':                                    'power',
+    'EE-613 — Advanced Optics':                                           'power',
+    'EE-614 — Optical Simulation Methods':                                'power',
+    'EE-615 — Antenna Systems':                                           'power',
+    'EE-711 — Array Signal Processing':                                   'power',
+    'EE-712 — Detection and Estimation Theory':                           'power',
+    'EE-713 — Radar Engineering':                                         'power',
+    'EE-714 — Electromagnetic Engineering':                               'power',
+    'EE-715 — Computational Methods of Field Theory':                     'power',
+    'EE-721 — Semiconductor Optoelectronic Devices':                      'power',
+    'EE-722 — Integrated Photonics Circuits Design':                      'power',
+    'EE-725 — Micro and Nano Fabrication Techniques':                     'power',
+    'EE-811 — Advanced Array Signal Processing':                          'power',
+    'EE-813 — Advanced Detection and Estimation Theory':                  'power',
+    'EE-814 — Kalman Filters':                                            'power',
+    'EE-817 — Special Topics in Photonics':                               'power',
+    'EE-818 — Special Topics in Lasers and Optics':                       'power',
+    'EE-819 — Special Topics in Radar Systems Engineering':               'power',
+    'EE-630 — Intelligent Antenna Systems':                               'power',
+    'EE-716 — Advanced Microwave Engineering':                            'power',
+    'EE-717 — Antennas for 5G and Beyond':                                'power',
+    // Communication & Signal Processing
+    'EE-632 — Adaptive Filters':                                          'communication',
+    'EE-633 — Advanced Digital Communications I':                         'communication',
+    'EE-634 — Advanced Coding Theory':                                    'communication',
+    'EE-635 — Satellite Communications':                                  'communication',
+    'EE-636 — Advanced Mobile Communications':                            'communication',
+    'EE-637 — Lasers and Optical Sources':                                'communication',
+    'EE-638 — Photo-detectors':                                           'communication',
+    'EE-731 — Optimization Techniques':                                   'communication',
+    'EE-732 — Advanced Digital Communications II':                        'communication',
+    'EE-733 — Information Theory':                                        'communication',
+    'EE-734 — Multimedia Communications':                                 'communication',
+    'EE-735 — Optical Waveguide Design':                                  'communication',
+    'EE-831 — Advanced Wireless Techniques':                              'communication',
+    'EE-832 — Space-Time Coding':                                         'communication',
+    'EE-833 — Adaptive Wireless Transceivers':                            'communication',
+    'EE-834 — Statistical Signal Processing':                             'communication',
+    'EE-838 — Special Topics in Signal Processing':                       'communication',
+    'EE-839 — Special Topics in Digital Communication Systems':           'communication',
+    'EE-726 — Telecommunication & Switching Principles':                  'communication',
+    'EE-827 — Advance Optical Fiber Communication':                       'communication',
+    'EE-618 — Digital Telephony':                                         'communication',
+    'EE-619 — Telecommunication Network Management':                      'communication',
+    'EE-623 — Wireless Sensor Networks':                                  'communication',
+    'EE-815 — Advanced Topics in Wireless Networks':                      'communication',
+    // Power & Control Systems
+    'EE-652 — Digital Control Systems':                                   'control',
+    'EE-653 — System Identification':                                     'control',
+    'EE-654 — Adaptive Control':                                          'control',
+    'EE-655 — Real-Time Control':                                         'control',
+    'EE-656 — Advanced Power Electronics':                                'power',
+    'EE-657 — Evolutionary Engineering Optimization':                     'control',
+    'EE-659 — Power Systems Component Modelling':                         'power',
+    'EE-751 — Power Electronics for Power Systems':                       'power',
+    'EE-752 — Advanced Neural Networks':                                  'control',
+    'EE-753 — Intelligent Control':                                       'control',
+    'EE-754 — Advanced Robotics and Control':                             'control',
+    'EE-755 — Optimal Control':                                           'control',
+    'EE-756 — Robust Control':                                            'control',
+    'EE-757 — Sliding Mode Control':                                      'control',
+    'EE-758 — Dynamics and Controls of Electrical Machines':              'control',
+    'EE-759 — Special Topics in Intelligent Systems and Control':         'control',
+    'EE-760 — Advanced High Voltage Engineering and Breakdown Theory':    'power',
+    'EE-761 — Power System State Estimation':                             'power',
+    'EE-851 — Nonlinear Systems & Control':                               'control',
+    'EE-852 — Advanced Process Control':                                  'control',
+    'EE-853 — Power System Operation and Protections':                    'power',
+    'EE-854 — Advanced Topics in Nature Inspired Optimization Techniques':'control',
+    'EE-855 — Advanced Topics in Intelligent Systems and Control':        'control',
+    'EE-856 — Neuro-Fuzzy Control':                                       'control',
+    'EE-857 — Stochastic Control':                                        'control',
+    'EE-858 — Special Topics in Power and Control':                       'control',
+    'EE-859 — Special Topics in Control Systems':                         'control',
+    'EE-860 — Renewable Power Production and Transportation':             'power',
+    // Machine Learning & Image Processing
+    'EE-671 — Digital Image Processing':                                  'ml',
+    'EE-672 — Data Mining':                                               'ml',
+    'EE-673 — Advanced Digital Image Processing':                         'ml',
+    'EE-771 — Pattern Recognition':                                       'ml',
+    'EE-723 — Signal Processing for Machine Learning':                    'ml',
+    'EE-772 — Machine Learning':                                          'ml',
+    'EE-773 — Computer Vision':                                           'ml',
+    'EE-774 — Medical Imaging':                                           'ml',
+    'EE-775 — Satellite Imaging':                                         'ml',
+    'EE-776 — Visual Perception':                                         'ml',
+    'EE-777 — Compressive Sensing':                                       'ml',
+    'EE-778 — Graphical Models':                                          'ml',
+    'EE-779 — Computational Intelligence':                                'ml',
+    'EE-781 — Advanced Computer Architecture':                            'ml',
+    'EE-782 — Advanced Operating Systems':                                'ml',
+    'EE-783 — High Performance Scientific Computing':                     'ml',
+    'EE-871 — Special Topics in Pattern Recognition':                     'ml',
+    'EE-872 — Special Topics in Signal and Image Processing':             'ml',
+    'EE-873 — Special Topics in Machine Learning':                        'ml',
+    'EE-874 — Advanced Computer Vision':                                  'ml',
+    'EE-884 — Parallel Computer Architecture':                            'ml',
+    'EE-718 — Internet of Things and Smart Systems':                      'ml',
+    'EE-719 — Parallel Computing':                                        'ml',
+    'EE-720 — Advanced Computer Networks':                                'ml',
+    'EE-621 — Internet Architectures and Protocols':                      'ml',
+    'EE-820 — Selected Topics in Internet of Things (IoT)':               'ml',
+    'EE-784 — Cyber-Physical Systems Modelling':                          'ml',
+  };
+  const CLUSTER_LABEL = { power: '⚡ Electromagnetics & Power Systems', control: '🎛️ Control Systems', communication: '📡 Communication & Signal Processing', ml: '🤖 Machine Learning & Image Processing' };
+  let rowNum       = 0;
+  let adminMode    = false;
+  let adminOverride = false;  // when true: skip all load/split/cluster/reassign checks
+  let headerTapCount = 0;
+  let headerTapTimer = null;
+
+  /* ── RESTRICTIONS ── */
+  function loadRestrictions() {
+    db.doc(SETTINGS_DOC).onSnapshot(snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        if (d.maxTotal     !== undefined) restrictions.maxTotal     = d.maxTotal;
+        if (d.splits       !== undefined) restrictions.splits       = d.splits;
+        if (d.allowReassign!== undefined) restrictions.allowReassign= d.allowReassign;
+        if (d.clusterLimits!== undefined) restrictions.clusterLimits= d.clusterLimits;
+      }
+      applyRestrictionsToUI();
+    }, err => {
+      console.warn('Could not load restrictions:', err.message);
+      applyRestrictionsToUI();
+    });
+  }
+
+  function buildRuleSentence() {
+    const total = restrictions.maxTotal ?? 2;
+    const splits = restrictions.splits ?? [];
+    const validSplits = splits.filter(s => (s.ms + s.phd) <= total && (s.ms + s.phd) > 0);
+    if (validSplits.length === 0) return `Each faculty member may be assigned up to ${total} course${total !== 1 ? 's' : ''} total.`;
+    const opts = validSplits.map(s => {
+      if (s.ms > 0 && s.phd === 0) return `${s.ms} MS`;
+      if (s.phd > 0 && s.ms === 0) return `${s.phd} PhD`;
+      return `${s.ms} MS + ${s.phd} PhD`;
+    });
+    const last = opts.pop();
+    return opts.length
+      ? `Each faculty member may take: ${opts.join(', ')}, or ${last} — ${total} course${total !== 1 ? 's' : ''} total.`
+      : `Each faculty member may take: ${last} — ${total} course${total !== 1 ? 's' : ''} total.`;
+  }
+
+  function applyRestrictionsToUI() {
+    document.getElementById('rule-combo-sentence').textContent = buildRuleSentence();
+    document.getElementById('rule-reassign-label').textContent =
+      restrictions.allowReassign ? 'may be re-assigned' : 'cannot be re-assigned';
+    syncModalInputs();
+  }
+
+  function getSplitRows() {
+    return document.querySelectorAll('#combo-rows-wrap .combo-split-row');
+  }
+
+  function syncModalInputs() {
+    document.getElementById('r-maxTotal').value = restrictions.maxTotal ?? 2;
+    document.getElementById('r-allowReassign').checked = restrictions.allowReassign;
+    const rows = getSplitRows();
+    const splits = restrictions.splits ?? [ {ms:2,phd:0}, {ms:0,phd:2}, {ms:1,phd:1} ];
+    rows.forEach((row, i) => {
+      const s = splits[i] ?? {ms:0, phd:0};
+      row.querySelector('.split-ms').value  = s.ms;
+      row.querySelector('.split-phd').value = s.phd;
+    });
+    updateToggleStates();
+    updateComboPreview();
+    // Sync cluster limits
+    const cl = restrictions.clusterLimits || DEFAULT_CLUSTER_LIMITS;
+    ['power','control','communication','ml'].forEach(cluster => {
+      ['ms1','ms3','phd'].forEach(sem => {
+        const el = document.getElementById(`cl-${cluster}-${sem}`);
+        if (el) el.value = (cl[cluster] && cl[cluster][sem] !== undefined) ? cl[cluster][sem] : 2;
+      });
+    });
+  }
+
+  function updateComboPreview() {
+    const total = parseInt(document.getElementById('r-maxTotal').value, 10) || 0;
+    const rows = getSplitRows();
+    const opts = [];
+    rows.forEach(row => {
+      const ms  = parseInt(row.querySelector('.split-ms').value,  10) || 0;
+      const phd = parseInt(row.querySelector('.split-phd').value, 10) || 0;
+      let label = '';
+      if (ms > 0 && phd === 0) label = `${ms} MS`;
+      else if (phd > 0 && ms === 0) label = `${phd} PhD`;
+      else if (ms > 0 && phd > 0) label = `${ms} MS + ${phd} PhD`;
+      row.querySelector('.split-label').textContent = label;
+      if (label && (ms + phd) <= total) opts.push(label);
+    });
+    const preview = opts.length
+      ? `Max ${total} courses. Valid options: ` + opts.join(' · ')
+      : `Max ${total} courses — define valid splits above.`;
+    document.getElementById('combo-preview-text').textContent = preview;
+  }
+
+  function onStepperChange() { updateComboPreview(); }
+
+  function updateToggleStates() {
+    document.getElementById('r-allowReassign-state').textContent = restrictions.allowReassign ? 'ON' : 'OFF';
+  }
+
+  function stepR(key, delta) {
+    const el = document.getElementById('r-' + key);
+    let val = parseInt(el.value, 10) + delta;
+    val = Math.max(1, Math.min(10, val));
+    el.value = val;
+    updateComboPreview();
+  }
+
+  function stepSplit(rowIdx, type, delta) {
+    const row = getSplitRows()[rowIdx];
+    const el  = row.querySelector(type === 'ms' ? '.split-ms' : '.split-phd');
+    let val = parseInt(el.value, 10) + delta;
+    val = Math.max(0, Math.min(10, val));
+    el.value = val;
+    updateComboPreview();
+  }
+
+  function stepCluster(cluster, sem, delta) {
+    const el = document.getElementById(`cl-${cluster}-${sem}`);
+    if (!el) return;
+    let val = parseInt(el.value, 10) + delta;
+    val = Math.max(0, Math.min(20, val));
+    el.value = val;
+  }
+
+  function onToggleChange() { updateToggleStates(); }
+
+  function openRestrictionsModal()  { syncModalInputs(); document.getElementById('rest-save-status').textContent = ''; document.getElementById('restrictions-modal').classList.add('open'); }
+  function closeRestrictionsModal() { document.getElementById('restrictions-modal').classList.remove('open'); }
+
+  async function saveRestrictions() {
+    if (!adminMode) return;
+    const rows = getSplitRows();
+    const splits = [];
+    rows.forEach(row => {
+      const ms  = parseInt(row.querySelector('.split-ms').value,  10) || 0;
+      const phd = parseInt(row.querySelector('.split-phd').value, 10) || 0;
+      splits.push({ ms, phd });
+    });
+    const newR = {
+      maxTotal:      parseInt(document.getElementById('r-maxTotal').value, 10),
+      splits,
+      allowReassign: document.getElementById('r-allowReassign').checked,
+      clusterLimits: {},
+    };
+    ['power','control','communication','ml'].forEach(cluster => {
+      newR.clusterLimits[cluster] = {};
+      ['ms1','ms3','phd'].forEach(sem => {
+        const el = document.getElementById(`cl-${cluster}-${sem}`);
+        newR.clusterLimits[cluster][sem] = el ? (parseInt(el.value, 10) || 0) : 2;
+      });
+    });
+    const statusEl = document.getElementById('rest-save-status');
+    statusEl.textContent = 'Saving…'; statusEl.className = 'rest-save-status';
+    try {
+      await db.doc(SETTINGS_DOC).set(newR, { merge: true });
+      restrictions = { ...restrictions, ...newR };
+      applyRestrictionsToUI();
+      statusEl.textContent = 'Saved to database successfully.';
+      statusEl.className = 'rest-save-status ok';
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'rest-save-status'; }, 3000);
+    } catch (e) {
+      statusEl.textContent = 'Save failed — ' + e.message;
+      statusEl.className = 'rest-save-status err';
+    }
+  }
+
+  document.getElementById('restrictions-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeRestrictionsModal();
+  });
+
+  /* ── ADMIN ── */
+  function openAdminModal() {
+    document.getElementById('admin-modal').classList.add('open');
+    document.getElementById('admin-pw-input').value = '';
+    document.getElementById('modal-error').textContent = '';
+    setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
+  }
+  function closeAdminModal() { document.getElementById('admin-modal').classList.remove('open'); }
+
+  function confirmAdmin() {
+    const pw = document.getElementById('admin-pw-input').value;
+    if (pw === ADMIN_PASSWORD) {
+      activateAdmin(); closeAdminModal();
+    } else {
+      const inp = document.getElementById('admin-pw-input');
+      inp.classList.add('shake');
+      document.getElementById('modal-error').textContent = 'Incorrect password. Please try again.';
+      inp.value = '';
+      setTimeout(() => inp.classList.remove('shake'), 400);
+    }
+  }
+
+  function activateAdmin() {
+    adminMode = true;
+    document.body.classList.add('admin-mode');
+    document.getElementById('admin-badge').classList.add('show');
+    syncStatus('ok', `Database connected — ${assignments.length} allocation(s) submitted`);
+  }
+
+  function deactivateAdmin() {
+    adminMode = false;
+    adminOverride = false;
+    document.body.classList.remove('admin-mode');
+    document.getElementById('admin-badge').classList.remove('show');
+    // reset override UI
+    const tog = document.getElementById('admin-override-toggle');
+    if (tog) tog.checked = false;
+    const st = document.getElementById('admin-override-state');
+    if (st) st.textContent = 'OFF';
+    const ban = document.getElementById('admin-override-banner');
+    if (ban) ban.style.display = 'none';
+    syncStatus('ok', `Database connected — ${assignments.length} allocation(s) submitted`);
+  }
+
+  function onAdminOverrideChange() {
+    adminOverride = document.getElementById('admin-override-toggle').checked;
+    document.getElementById('admin-override-state').textContent = adminOverride ? 'ON' : 'OFF';
+    document.getElementById('admin-override-banner').style.display = adminOverride ? 'inline-block' : 'none';
+    if (adminOverride) refreshCourseSelectState(); // re-enable any greyed selects
+  }
+
+  function handleHeaderTap() {
+    headerTapCount++;
+    clearTimeout(headerTapTimer);
+    if (headerTapCount >= 3) {
+      headerTapCount = 0;
+      adminMode ? deactivateAdmin() : openAdminModal();
+      return;
+    }
+    headerTapTimer = setTimeout(() => { headerTapCount = 0; }, 600);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+      e.preventDefault();
+      adminMode ? deactivateAdmin() : openAdminModal();
+    }
+    if (e.key === 'Escape') closeAdminModal();
+  });
+
+  document.getElementById('admin-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAdminModal();
+  });
+
+  /* ── SYNC HELPERS ── */
+  function syncStatus(state, msg) {
+    document.getElementById('sync-dot').className = 'sync-dot ' + state;
+    document.getElementById('sync-text').textContent = msg;
+  }
+
+  /* ── FIRESTORE ── */
+  function loadFromStorage() {
+    syncStatus('saving', 'Connecting to database…');
+    db.collection(COL).orderBy('timestamp', 'asc').onSnapshot(snapshot => {
+      assignments = []; courseOwners = {}; facultySlots = {}; rowNum = 0;
+      snapshot.forEach(doc => {
+        const item = { id: doc.id, ...doc.data() };
+        assignments.push(item);
+        courseOwners[item.course] = item.faculty;
+        if (!facultySlots[item.faculty]) facultySlots[item.faculty] = { ms: null, msCount: 0, phd: null, phdCount: 0, totalCount: 0 };
+        facultySlots[item.faculty].totalCount = (facultySlots[item.faculty].totalCount || 0) + 1;
+        if (item.cat === 'phd' || item.cat === 'cephd') {
+          facultySlots[item.faculty].phd = item.course;
+          facultySlots[item.faculty].phdCount = (facultySlots[item.faculty].phdCount || 0) + 1;
+        } else {
+          facultySlots[item.faculty].ms = item.course;
+          facultySlots[item.faculty].msCount = (facultySlots[item.faculty].msCount || 0) + 1;
+        }
+        rowNum++;
+      });
+      renderAllRows();
+      updateClusterStatusBanner();
+      refreshCourseSelectState();
+      syncStatus('ok', `Database connected — ${assignments.length} allocation(s) submitted`);
+      document.getElementById('loading-overlay').style.display = 'none';
+    }, err => {
+      syncStatus('error', 'Database error — ' + err.message);
+      document.getElementById('loading-overlay').style.display = 'none';
+    });
+  }
+
+  async function saveToStorage(item) {
+    syncStatus('saving', 'Saving…');
+    try {
+      await db.collection(COL).doc(item.id).set({
+        faculty: item.faculty, course: item.course, cat: item.cat,
+        time: item.time, isRM: !!item.isRM, isCompulsory: !!item.isCompulsory,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      syncStatus('ok', `Saved — ${assignments.length} assignment(s) stored`);
+    } catch (e) {
+      syncStatus('error', 'Save failed — ' + e.message);
+    }
+  }
+
+  async function deleteFromStorage(id) {
+    syncStatus('saving', 'Deleting…');
+    try {
+      await db.collection(COL).doc(id).delete();
+      syncStatus('ok', `Deleted — ${assignments.length} assignment(s) remaining`);
+    } catch (e) {
+      syncStatus('error', 'Delete failed — ' + e.message);
+    }
+  }
+
+  async function clearAllFromStorage() {
+    syncStatus('saving', 'Clearing all records…');
+    try {
+      const snapshot = await db.collection(COL).get();
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      syncStatus('ok', 'All assignments cleared');
+    } catch (e) {
+      syncStatus('error', 'Clear failed — ' + e.message);
+    }
+  }
+
+  function renderAllRows() {
+    document.getElementById('tbody').innerHTML = '';
+    rowNum = 0;
+    if (assignments.length === 0) {
+      document.getElementById('empty').style.display = 'block';
+      document.getElementById('tbl').style.display   = 'none';
+      document.getElementById('count').textContent = '0';
+      return;
+    }
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('tbl').style.display   = 'table';
+    [...assignments].reverse().forEach((item, i) => addRow(item, assignments.length - i));
+    document.getElementById('count').textContent = assignments.length;
+  }
+
+  function addRow(item, n) {
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('tbl').style.display   = 'table';
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-id', item.id);
+    const isCore = item.isRM || item.isCompulsory;
+    const compulsoryBadge = isCore ? ' <span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:rgba(139,26,26,.1);color:var(--crimson);border:1px solid rgba(139,26,26,.25);padding:2px 7px;vertical-align:middle;">Compulsory</span>' : '';
+    tr.innerHTML = `
+      <td>${String(n).padStart(2,'0')}</td>
+      <td class="tf"><span class="live-dot"></span>${item.faculty}</td>
+      <td class="tc">${item.course}${compulsoryBadge}</td>
+      <td class="tcat ${item.cat}">${LABEL[item.cat] || item.cat}</td>
+      <td class="tt">${item.time}</td>
+      <td><button class="del-btn" title="Remove (Admin only)" onclick="deleteAssignment('${item.id}')">✕</button></td>`;
+    document.getElementById('tbody').prepend(tr);
+    document.getElementById('count').textContent = assignments.length;
+  }
+
+  async function deleteAssignment(id) {
+    if (!adminMode) return;
+    await deleteFromStorage(id);
+  }
+
+  async function clearAllAssignments() {
+    if (!adminMode) return;
+    if (!confirm('Are you certain you wish to clear all assignment records? This action cannot be undone.')) return;
+    await clearAllFromStorage();
+  }
+
+  /* ── CONFLICT DETECTION ── */
+  function onMSChange(changed) {
+    clearInlineNotice('ms1'); clearInlineNotice('ms3');
+    hideAlert();
+  }
+
+  function onCEMSChange(changed) {
+    clearInlineNotice('ce1'); clearInlineNotice('ce3');
+    hideAlert();
+  }
+
+  function onCE1CompulsoryChange() {
+    clearInlineNotice('ce1-comp');
+    hideAlert();
+  }
+
+  function onCEPhdChange() { clearInlineNotice('cephd'); hideAlert(); }
+  function onPhdChange()   { clearInlineNotice('phd'); hideAlert(); }
+
+  function onFacultyChange() {
+    hideAlert();
+    refreshCourseSelectState();
+  }
+
+  const MS_SELECTS  = ['sel-ms1','sel-ms3','sel-ce1'];
+  const PHD_SELECTS = ['sel-phd','sel-cephd'];
+
+  function refreshCourseSelectState() {
+    if (adminOverride) return;
+    const faculty = document.getElementById('sel-faculty').value;
+    const maxTotal = restrictions.maxTotal ?? 2;
+    const splits   = restrictions.splits   ?? [{ms:2,phd:0},{ms:0,phd:2},{ms:1,phd:1}];
+
+    if (!faculty) return;
+
+    const sl         = facultySlots[faculty] || { msCount: 0, phdCount: 0, totalCount: 0 };
+    const usedTotal  = sl.totalCount || 0;
+    const usedMS     = sl.msCount    || 0;
+    const usedPhD    = sl.phdCount   || 0;
+
+    // If FM is already at or above the global cap, block all selects
+    if (usedTotal >= maxTotal) {
+      MS_SELECTS.forEach(id  => { const el = document.getElementById(id);  if (el) el.value = ''; });
+      PHD_SELECTS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      return;
+    }
+
+    const canTakeMS  = splits.some(s => (usedMS + 1) <= s.ms && usedPhD <= s.phd);
+    const canTakePhD = splits.some(s => usedMS <= s.ms && (usedPhD + 1) <= s.phd);
+
+    if (!canTakeMS)  MS_SELECTS.forEach(id  => { const el = document.getElementById(id);  if (el) el.value = ''; });
+    if (!canTakePhD) PHD_SELECTS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  }
+
+  /* ── PROGRAM SWITCHER ── */
+  let activeProgram = 'ee';
+  function switchProgram(prog) {
+    activeProgram = prog;
+    document.getElementById('prog-btn-ee').classList.toggle('active', prog === 'ee');
+    document.getElementById('prog-btn-ce').classList.toggle('active', prog === 'ce');
+    document.getElementById('prog-ee').classList.toggle('active', prog === 'ee');
+    document.getElementById('prog-ce').classList.toggle('active', prog === 'ce');
+    ['sel-ms1','sel-ms3','sel-phd','sel-ce1','sel-cephd'].forEach(id => { document.getElementById(id).value = ''; });
+    ['ms1','ms3','phd','ce1','cephd'].forEach(clearInlineNotice);
+    hideAlert();
+  }
+
+  /* ── SUBMIT ── */
+  // Count how many courses from a cluster have been assigned in a given semester/cat
+  function getClusterSemCount(cluster, cat) {
+    return assignments.filter(item =>
+      item.cat === cat &&
+      COURSE_CLUSTER[item.course] === cluster
+    ).length;
+  }
+
+  // Update the cluster status banner — shows per-semester slot usage per cluster
+  function updateClusterStatusBanner() {
+    const banner = document.getElementById('ee-cluster-status');
+    if (!banner) return;
+    const clusters = ['power', 'communication', 'ml'];
+    const cats = ['ms1', 'ms3', 'phd'];
+    const catLabel = { ms1: 'MSEE Sem 1', ms3: 'MSEE Sem 3', phd: 'PhD EE' };
+    let rows = [];
+    for (const cluster of clusters) {
+      let parts = [];
+      for (const cat of cats) {
+        const count = getClusterSemCount(cluster, cat);
+        const cl = restrictions.clusterLimits || DEFAULT_CLUSTER_LIMITS;
+        const cap = (cl[cluster] && cl[cluster][cat] !== undefined) ? cl[cluster][cat] : 2;
+        if (count > 0) parts.push(`${catLabel[cat]}: ${count}/${cap}`);
+      }
+      if (parts.length > 0) rows.push(`${CLUSTER_LABEL[cluster]}: ${parts.join(', ')}`);
+    }
+    if (rows.length === 0) { banner.style.display = 'none'; return; }
+    banner.innerHTML = '📊 Cluster usage: &nbsp;<strong>' + rows.join(' &nbsp;|&nbsp; ') + '</strong>';
+    banner.style.display = 'block';
+  }
+
+  async function submitAssignment() {
+    const faculty = document.getElementById('sel-faculty').value;
+    if (!faculty) { showAlert('danger','⚠','Please select a faculty member.'); return; }
+
+    // Build list of all selected courses this submission
+    const toAssign = [];
+
+    if (activeProgram === 'ee') {
+      const ms1val    = document.getElementById('sel-ms1').value;
+      const ms3val    = document.getElementById('sel-ms3').value;
+      const phdval    = document.getElementById('sel-phd').value;
+      const rmval     = document.getElementById('sel-ms3-rm').value;
+      const compval   = document.getElementById('sel-ms1-comp').value;
+      if (ms1val) toAssign.push({ course: ms1val, cat: 'ms1' });
+      if (ms3val) toAssign.push({ course: ms3val, cat: 'ms3' });
+      if (phdval) toAssign.push({ course: phdval, cat: 'phd' });
+      if (rmval)  toAssign.push({ course: 'MSEE3 — Research Methodology', cat: 'ms3-rm', isRM: true });
+      if (compval) {
+        const compCat = compval === 'MSEE1 — Linear Systems' ? 'ms1-ls' : 'ms1-sp';
+        toAssign.push({ course: compval, cat: compCat, isCompulsory: true });
+      }
+    } else {
+      const ce1val     = document.getElementById('sel-ce1').value;
+      const ce1compval = document.getElementById('sel-ce1-comp').value;
+      const cephdval   = document.getElementById('sel-cephd').value;
+      if (ce1val)     toAssign.push({ course: ce1val,   cat: 'ce1' });
+      if (ce1compval) toAssign.push({ course: ce1compval, cat: 'ce1-comp', isCompulsory: true });
+      if (cephdval)   toAssign.push({ course: cephdval, cat: 'cephd' });
+    }
+
+    if (toAssign.length === 0) { showAlert('danger','⚠','Please select at least one course before submitting.'); return; }
+
+    // ── ADMIN OVERRIDE: skip all load/split/cluster/reassign checks ──
+    if (adminOverride) {
+      const time = new Date().toLocaleString([], { dateStyle:'medium', timeStyle:'short' });
+      for (const item of toAssign) {
+        const assignFaculty = faculty;
+        const rec = { id: Date.now() + '_' + Math.random().toString(36).slice(2), faculty: assignFaculty, course: item.course, cat: item.cat, time, isRM: !!(item.isRM), isCompulsory: !!(item.isCompulsory) };
+        await saveToStorage(rec);
+      }
+      updateClusterStatusBanner();
+      const names = toAssign.map(x => `"${x.course}"`).join(', ');
+      showAlert('success','✔', `[Override] Assigned: ${names}.`);
+      ['sel-faculty','sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ce1','sel-ce1-comp','sel-cephd','sel-ms1-comp'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      ['ms1','ms3','ms3-rm','phd','ce1','ce1-comp','cephd','ms1-comp'].forEach(clearInlineNotice);
+      return;
+    }
+
+    // ── NORMAL VALIDATION ──
+    // ALL courses (elective + compulsory) count toward the FM's total limit.
+    // Compulsory items are assigned to their own rmFaculty, so validate against each FM's quota.
+
+    // Group by the faculty who will actually receive each course
+    const byFaculty = {};
+    for (const item of toAssign) {
+      const f = faculty;
+      if (!byFaculty[f]) byFaculty[f] = [];
+      byFaculty[f].push(item);
+    }
+
+    const maxTotal = restrictions.maxTotal ?? 2;
+    const splits   = restrictions.splits ?? [{ms:2,phd:0},{ms:0,phd:2},{ms:1,phd:1}];
+
+    // Validate each affected FM
+    for (const [fm, items] of Object.entries(byFaculty)) {
+      const sl        = facultySlots[fm] || { msCount: 0, phdCount: 0, totalCount: 0 };
+      const usedTotal = sl.totalCount || 0;
+      const newTotal  = items.length;
+
+      if (usedTotal + newTotal > maxTotal) {
+        showAlert('danger','✖', `You would exceed the maximum of ${maxTotal} course${maxTotal !== 1 ? 's' : ''} total (currently assigned ${usedTotal}).`);
+        return;
+      }
+
+      // Split validation only applies to elective (non-compulsory) items
+      const electiveItems = items.filter(x => !x.isRM && !x.isCompulsory);
+      if (electiveItems.length > 0) {
+        const usedMS  = sl.msCount  || 0;
+        const usedPhD = sl.phdCount || 0;
+        const newMS   = electiveItems.filter(x => x.cat !== 'phd' && x.cat !== 'cephd').length;
+        const newPhD  = electiveItems.filter(x => x.cat === 'phd' || x.cat === 'cephd').length;
+        const totalMS  = usedMS  + newMS;
+        const totalPhD = usedPhD + newPhD;
+        const withinASplit = splits.some(s => totalMS <= (s.ms ?? maxTotal) && totalPhD <= (s.phd ?? maxTotal));
+        if (!withinASplit) {
+          const opts = splits.map(s => {
+            if (s.ms > 0 && s.phd === 0) return `${s.ms} MS`;
+            if (s.phd > 0 && s.ms === 0) return `${s.phd} PhD`;
+            return `${s.ms} MS + ${s.phd} PhD`;
+          }).join(', ');
+          showAlert('danger','✖', `Invalid combination. Allowed options: ${opts}.`);
+          return;
+        }
+      }
+    }
+
+    // Cluster validation (EE only — elective courses only)
+    if (activeProgram === 'ee') {
+      const electiveEE = toAssign.filter(x => !x.isRM && !x.isCompulsory && (x.cat === 'ms1' || x.cat === 'ms3' || x.cat === 'phd'));
+      for (const { course, cat } of electiveEE) {
+        const cluster = COURSE_CLUSTER[course];
+        if (!cluster) continue;
+        const cl = restrictions.clusterLimits || DEFAULT_CLUSTER_LIMITS;
+        const clusterCap = (cl[cluster] && cl[cluster][cat] !== undefined) ? cl[cluster][cat] : 2;
+        const semCount = getClusterSemCount(cluster, cat);
+        if (semCount >= clusterCap) {
+          const semLabel = cat === 'ms1' ? 'MSEE Sem 1' : cat === 'ms3' ? 'MSEE Sem 3' : 'PhD EE Sem 1';
+          showAlert('danger','✖', `${CLUSTER_LABEL[cluster]} cluster is full for ${semLabel} — ${clusterCap} course${clusterCap !== 1 ? 's' : ''} already assigned. Please select from another cluster.`);
+          return;
+        }
+      }
+    }
+
+    // Reassign check (elective courses only)
+    for (const item of toAssign.filter(x => !x.isRM && !x.isCompulsory)) {
+      if (!restrictions.allowReassign && courseOwners[item.course] && courseOwners[item.course] !== faculty) {
+        showAlert('danger','✖', `"${item.course}" is already assigned to another faculty member.`);
+        return;
+      }
+    }
+
+    const time = new Date().toLocaleString([], { dateStyle:'medium', timeStyle:'short' });
+    const savedItems = [];
+    toAssign.forEach(({ course, cat, isRM, isCompulsory }) => {
+      savedItems.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2), faculty, course, cat, time, isRM: !!isRM, isCompulsory: !!isCompulsory });
+    });
+
+    for (const item of savedItems) {
+      await saveToStorage(item);
+    }
+    updateClusterStatusBanner();
+
+    const names = toAssign.map(x => `"${x.course}" (${LABEL[x.cat]})`).join(' and ');
+    const slAfter = facultySlots[faculty] || { totalCount: 0 };
+    const totalAfter = (slAfter.totalCount || 0) + toAssign.filter(x => !x.isRM && !x.isCompulsory).length;
+    const limitMsg = totalAfter >= (restrictions.maxTotal ?? 2) ? ` Your course limit of ${restrictions.maxTotal ?? 2} has been reached.` : '';
+    showAlert('success','✔', `You have been assigned: ${names}.${limitMsg}`);
+    ['sel-faculty','sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ce1','sel-ce1-comp','sel-cephd','sel-ms1-comp'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['ms1','ms3','ms3-rm','phd','ce1','ce1-comp','cephd','ms1-comp'].forEach(clearInlineNotice);
+    refreshCourseSelectState();
+  }
+
+  /* ── ALERT HELPERS ── */
+  function showAlert(type, icon, msg) {
+    const b = document.getElementById('alert-box');
+    b.className = type;
+    document.getElementById('a-icon').textContent = icon + ' ';
+    document.getElementById('a-msg').textContent  = msg;
+    b.style.display = 'flex';
+    if (type === 'danger') {
+      ['sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ce1','sel-ce1-comp','sel-cephd','sel-ms1-comp'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    }
+    if (type === 'success') setTimeout(hideAlert, 5000);
+  }
+  function hideAlert() { document.getElementById('alert-box').style.display = 'none'; }
+
+  function showInlineNotice(cat, msg) {
+    const el = document.getElementById('notice-' + cat);
+    el.textContent = msg; el.classList.add('show');
+    const sel = document.getElementById('sel-' + cat);
+    if (sel) sel.value = '';
+  }
+  function clearInlineNotice(cat) {
+    const el = document.getElementById('notice-' + cat);
+    el.textContent = ''; el.classList.remove('show');
+  }
+
+  /* ── RESEARCH METHODOLOGY CHANGE ── */
+  function onRMChange() {
+    clearInlineNotice('ms3-rm');
+    hideAlert();
+  }
+
+  /* ── MSEE SEM 1 COMPULSORY CHANGE ── */
+  function onMS1CompulsoryChange() {
+    clearInlineNotice('ms1-comp');
+    hideAlert();
+  }
+
+  /* ── EXPORT TO EXCEL ── */
+  function exportToExcel() {
+    if (!adminMode) return;
+    if (assignments.length === 0) {
+      showAlert('danger','⚠','No assignment records to export.');
+      return;
+    }
+
+    // Build CSV content
+    const headers = ['#','Faculty Member','Course','Category','Type','Assigned At'];
+    const rows = [...assignments].reverse().map((item, i) => [
+      String(i + 1).padStart(2, '0'),
+      item.faculty,
+      item.course,
+      LABEL[item.cat] || item.cat,
+      item.isRM ? 'Compulsory (RM)' : item.isCompulsory ? 'Compulsory (Core)' : 'Elective',
+      item.time
+    ]);
+
+    // Escape CSV cells
+    const escape = v => `"${String(v).replace(/"/g, '""')}"`;
+    const csvLines = [
+      headers.map(escape).join(','),
+      ...rows.map(r => r.map(escape).join(','))
+    ];
+
+    // Add summary section
+    csvLines.push('');
+    csvLines.push('"--- SUMMARY ---"');
+    csvLines.push('"Total Assignments","' + assignments.length + '"');
+
+    // Faculty summary
+    const byFaculty = {};
+    assignments.forEach(item => {
+      if (!byFaculty[item.faculty]) byFaculty[item.faculty] = { total: 0, ms: 0, phd: 0, rm: 0, core: 0 };
+      byFaculty[item.faculty].total++;
+      if (item.isRM) byFaculty[item.faculty].rm++;
+      else if (item.isCompulsory) byFaculty[item.faculty].core++;
+      else if (item.cat === 'phd' || item.cat === 'cephd') byFaculty[item.faculty].phd++;
+      else byFaculty[item.faculty].ms++;
+    });
+    csvLines.push('');
+    csvLines.push('"--- FACULTY SUMMARY ---"');
+    csvLines.push('"Faculty Member","Total","MS Electives","PhD Courses","Compulsory RM","Compulsory Core"');
+    Object.entries(byFaculty).sort().forEach(([name, s]) => {
+      csvLines.push([name, s.total, s.ms, s.phd, s.rm, s.core].map(escape).join(','));
+    });
+
+    const csvContent = '\uFEFF' + csvLines.join('\r\n'); // BOM for Excel UTF-8
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const date = new Date().toISOString().slice(0,10);
+    a.href     = url;
+    a.download = `Faculty_Course_Assignments_${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showAlert('success','✔', `Exported ${assignments.length} record(s) to Excel-compatible CSV.`);
+  }
+
+  window.addEventListener('load', () => { loadRestrictions(); loadFromStorage(); });
+</script>
+</body>
+</html>
