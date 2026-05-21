@@ -862,6 +862,80 @@
 </head>
 <body>
 
+<!-- ── GUIDELINES POPUP ── -->
+<div id="guidelines-overlay" style="
+  position:fixed;inset:0;z-index:99999;
+  background:rgba(13,27,62,.65);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
+  overflow-y:auto;
+">
+  <div style="
+    background:#faf8f3;
+    border:1px solid #c8bfa8;
+    border-top:4px solid #c9a84c;
+    max-width:620px;width:100%;
+    max-height:90vh;
+    overflow-y:auto;
+    padding:28px 32px 24px;
+    position:relative;
+    box-shadow:0 12px 48px rgba(0,0,0,.35);
+    font-family:'EB Garamond',Georgia,serif;
+    animation:slideIn .25s ease;
+  ">
+    <!-- Close button -->
+    <button onclick="document.getElementById('guidelines-overlay').style.display='none'" style="
+      position:absolute;top:14px;right:16px;
+      background:none;border:none;cursor:pointer;
+      font-size:20px;color:#6a6055;line-height:1;
+    ">✕</button>
+
+    <!-- Header -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#c9a84c;margin-bottom:10px;">Course Allocation Guidelines</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:800;color:#0d1b3e;margin:0 0 20px;line-height:1.2;">Note on Course Allocation<br><em style="font-style:italic;color:#c9a84c;">for Faculty Members (FMs)</em></h2>
+
+    <hr style="border:none;border-top:1px solid #ddd;margin-bottom:18px;">
+
+    <div class="popup-editable-body">
+    <!-- Max courses -->
+    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">Each FM may select a <strong>maximum of 2 courses</strong> in total, in any of the following combinations:</p>
+    <ul style="margin:6px 0 16px 20px;padding:0;font-size:15px;color:#2a2a2a;line-height:1.9;">
+      <li>2 MS courses</li>
+      <li>2 PhD courses</li>
+      <li>1 MS + 1 PhD course</li>
+    </ul>
+
+    <!-- Clusters -->
+    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">The program has <strong>5 clusters</strong>. Within each cluster, an FM may offer:</p>
+    <ul style="margin:6px 0 16px 20px;padding:0;font-size:15px;color:#2a2a2a;line-height:1.9;">
+      <li><strong>1 course</strong> for MSEE Semester 1</li>
+      <li><strong>2 courses</strong> for MSEE Semester 3</li>
+    </ul>
+
+    <!-- Rationale -->
+    <div style="background:#f0ebe0;border-left:3px solid #c9a84c;padding:14px 16px;margin-bottom:18px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#a07830;margin-bottom:10px;">Rationale</div>
+      <p style="font-size:14px;color:#2a2a2a;margin:0 0 10px;line-height:1.7;">For <strong>MSEE Semester 1</strong>, students require only <strong>1 elective</strong>. Offering 1 course per cluster (5 total) provides sufficient choice while maintaining viable class sizes.</p>
+      <p style="font-size:14px;color:#2a2a2a;margin:0;line-height:1.7;">For <strong>MSEE Semester 3</strong>, students require <strong>2 electives</strong>, but enrollment is usually limited (7–9 students). The total number of offered courses must remain controlled to avoid classes with very low enrollment.</p>
+    </div>
+
+    <p style="font-size:13px;color:#6a6055;font-style:italic;margin:0 0 22px;line-height:1.6;">This policy ensures a balance between student choice and sustainable class strength.</p>
+    </div><!-- /popup-editable-body -->
+
+    <!-- Dismiss button -->
+    <div style="text-align:center;">
+      <button onclick="document.getElementById('guidelines-overlay').style.display='none'" style="
+        font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+        background:#0d1b3e;color:#fff;border:none;padding:12px 36px;cursor:pointer;
+        transition:background .2s;
+      " onmouseover="this.style.background='#c9a84c'" onmouseout="this.style.background='#0d1b3e'">
+        Understood — Proceed
+      </button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Loading Overlay -->
 <div id="loading-overlay">
   <div class="spinner"></div>
@@ -1048,6 +1122,105 @@
           </label>
           <span class="toggle-state" id="r-allowReassign-state">OFF</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Popup Notice Editor -->
+    <div class="rest-section" style="background:linear-gradient(135deg,#f8f4ec,#f0ebe0);border:1px solid #d4c99a;border-left:4px solid var(--gold);padding:20px 22px;">
+      <!-- Section header with icon -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold-dk));display:flex;align-items:center;justify-content:center;font-size:18px;">📋</div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-dk);margin-bottom:2px;">Admin Control</div>
+            <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--navy);">Startup Popup Notice</div>
+          </div>
+        </div>
+        <!-- Toggle pill -->
+        <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);padding:8px 16px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-lt);">Show on Load</span>
+          <label class="toggle" style="margin:0;">
+            <input type="checkbox" id="r-showPopup" checked onchange="onPopupToggleChange()"/>
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="r-showPopup-state" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--forest);min-width:24px;">ON</span>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="border-top:1px solid #d4c99a;margin-bottom:16px;"></div>
+
+      <!-- Editor label -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);">✏️ Edit Popup Content</span>
+        <span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--text-lt);font-style:italic;">— modify the notice text shown to faculty members</span>
+      </div>
+
+      <!-- Rich text toolbar -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#fff;border:1px solid var(--border);border-bottom:none;padding:8px 12px;">
+
+        <!-- Font size -->
+        <div style="display:flex;align-items:center;gap:6px;padding-right:10px;border-right:1px solid var(--border);">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-lt);letter-spacing:.1em;text-transform:uppercase;">Size</span>
+          <select id="popup-font-size" onchange="applyPopupFontSize(this.value)" style="
+            font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 6px;
+            border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;outline:none;
+          ">
+            <option value="12px">12</option>
+            <option value="13px">13</option>
+            <option value="14px" selected>14</option>
+            <option value="15px">15</option>
+            <option value="16px">16</option>
+            <option value="18px">18</option>
+            <option value="20px">20</option>
+          </select>
+        </div>
+
+        <!-- Format buttons -->
+        <div style="display:flex;gap:4px;padding-right:10px;border-right:1px solid var(--border);">
+          <button onclick="popupExecCmd('bold')" title="Bold" style="width:30px;height:28px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:700;font-size:13px;" onmouseover="this.style.background='#f0ebe0'" onmouseout="this.style.background='#fff'">B</button>
+          <button onclick="popupExecCmd('italic')" title="Italic" style="width:30px;height:28px;border:1px solid var(--border);background:#fff;cursor:pointer;font-style:italic;font-size:13px;" onmouseover="this.style.background='#f0ebe0'" onmouseout="this.style.background='#fff'">I</button>
+          <button onclick="popupExecCmd('underline')" title="Underline" style="width:30px;height:28px;border:1px solid var(--border);background:#fff;cursor:pointer;text-decoration:underline;font-size:13px;" onmouseover="this.style.background='#f0ebe0'" onmouseout="this.style.background='#fff'">U</button>
+        </div>
+
+        <!-- Alignment -->
+        <div style="display:flex;gap:4px;padding-right:10px;border-right:1px solid var(--border);">
+          <button onclick="popupExecCmd('justifyLeft')" title="Align Left" style="width:30px;height:28px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;" onmouseover="this.style.background='#f0ebe0'" onmouseout="this.style.background='#fff'">≡</button>
+          <button onclick="popupExecCmd('justifyCenter')" title="Center" style="width:30px;height:28px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;" onmouseover="this.style.background='#f0ebe0'" onmouseout="this.style.background='#fff'">≡</button>
+        </div>
+
+        <!-- List -->
+        <div style="display:flex;gap:4px;">
+          <button onclick="popupExecCmd('insertUnorderedList')" title="Bullet List" style="width:30px;height:28px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;" onmouseover="this.style.background='#f0ebe0'" onmouseout="this.style.background='#fff'">•≡</button>
+        </div>
+      </div>
+
+      <!-- Contenteditable editor -->
+      <div id="r-popupContent"
+        contenteditable="true"
+        oninput="onPopupContentChange()"
+        style="
+          width:100%;min-height:180px;padding:16px 18px;
+          font-family:'EB Garamond',Georgia,serif;font-size:14px;line-height:1.8;color:#1a1a1a;
+          background:#fffef9;border:1px solid var(--border);border-bottom:2px solid var(--gold);
+          outline:none;box-sizing:border-box;overflow-y:auto;
+        "
+      ></div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:10px;margin-top:14px;align-items:center;">
+        <button onclick="previewPopup()" style="
+          font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+          padding:10px 22px;border:none;cursor:pointer;
+          background:linear-gradient(135deg,var(--navy),var(--navy-lt));color:#fff;
+          display:flex;align-items:center;gap:7px;transition:opacity .2s;
+        " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">👁 Preview</button>
+        <button onclick="resetPopupDefault()" style="
+          font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+          padding:10px 22px;border:1px solid var(--border-dk);cursor:pointer;
+          background:#fff;color:var(--text-md);transition:background .2s;
+        " onmouseover="this.style.background='#f0ebe0'" onmouseout="this.style.background='#fff'">↺ Reset</button>
+        <span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--text-lt);font-style:italic;margin-left:4px;">Saved with "Save to Database"</span>
       </div>
     </div>
 
@@ -1744,7 +1917,7 @@
     allowReassign: false,
     clusterLimits: JSON.parse(JSON.stringify(DEFAULT_CLUSTER_LIMITS)),
   };
-  const ADMIN_PASSWORD = 'admin1234';
+  const ADMIN_PASSWORD = 'pg2026';
   const LABEL = {
     ms1:'MSEE Sem 1', ms3:'MSEE Sem 3', phd:'PhD EE Sem 1',
     ce1:'MSCE Sem 1',  ce3:'MSCE Sem 3',  cephd:'PhD CE Sem 1',
@@ -1760,6 +1933,32 @@
   let facultySlots = {};
 
   // Maps each EE course value to its cluster
+  const DEFAULT_POPUP_CONTENT = `
+    <!-- Max courses -->
+    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">Each FM may select a <strong>maximum of 2 courses</strong> in total, in any of the following combinations:</p>
+    <ul style="margin:6px 0 16px 20px;padding:0;font-size:15px;color:#2a2a2a;line-height:1.9;">
+      <li>2 MS courses</li>
+      <li>2 PhD courses</li>
+      <li>1 MS + 1 PhD course</li>
+    </ul>
+
+    <!-- Clusters -->
+    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">The program has <strong>5 clusters</strong>. Within each cluster, an FM may offer:</p>
+    <ul style="margin:6px 0 16px 20px;padding:0;font-size:15px;color:#2a2a2a;line-height:1.9;">
+      <li><strong>1 course</strong> for MSEE Semester 1</li>
+      <li><strong>2 courses</strong> for MSEE Semester 3</li>
+    </ul>
+
+    <!-- Rationale -->
+    <div style="background:#f0ebe0;border-left:3px solid #c9a84c;padding:14px 16px;margin-bottom:18px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#a07830;margin-bottom:10px;">Rationale</div>
+      <p style="font-size:14px;color:#2a2a2a;margin:0 0 10px;line-height:1.7;">For <strong>MSEE Semester 1</strong>, students require only <strong>1 elective</strong>. Offering 1 course per cluster (5 total) provides sufficient choice while maintaining viable class sizes.</p>
+      <p style="font-size:14px;color:#2a2a2a;margin:0;line-height:1.7;">For <strong>MSEE Semester 3</strong>, students require <strong>2 electives</strong>, but enrollment is usually limited (7–9 students). The total number of offered courses must remain controlled to avoid classes with very low enrollment.</p>
+    </div>
+
+    <p style="font-size:13px;color:#6a6055;font-style:italic;margin:0 0 22px;line-height:1.6;">This policy ensures a balance between student choice and sustainable class strength.</p>
+    `;
+
   const COURSE_CLUSTER = {
     // Electromagnetics & Photonics
     'EE-611 — Electromagnetic Fields':                                    'power',
@@ -1882,11 +2081,15 @@
         if (d.splits       !== undefined) restrictions.splits       = d.splits;
         if (d.allowReassign!== undefined) restrictions.allowReassign= d.allowReassign;
         if (d.clusterLimits!== undefined) restrictions.clusterLimits= d.clusterLimits;
+        if (d.showPopup    !== undefined) restrictions.showPopup    = d.showPopup;
+        if (d.popupContent !== undefined) restrictions.popupContent = d.popupContent;
       }
       applyRestrictionsToUI();
+      applyPopupSettings();
     }, err => {
       console.warn('Could not load restrictions:', err.message);
       applyRestrictionsToUI();
+      applyPopupSettings();
     });
   }
 
@@ -1937,6 +2140,17 @@
         if (el) el.value = (cl[cluster] && cl[cluster][sem] !== undefined) ? cl[cluster][sem] : 2;
       });
     });
+    // Sync popup settings
+    const showPopupEl = document.getElementById('r-showPopup');
+    const popupContentEl = document.getElementById('r-popupContent');
+    if (showPopupEl) {
+      const show = restrictions.showPopup !== undefined ? restrictions.showPopup : true;
+      showPopupEl.checked = show;
+      document.getElementById('r-showPopup-state').textContent = show ? 'ON' : 'OFF';
+    }
+    if (popupContentEl) {
+      popupContentEl.innerHTML = restrictions.popupContent || getDefaultPopupContent();
+    }
   }
 
   function updateComboPreview() {
@@ -1963,6 +2177,10 @@
 
   function updateToggleStates() {
     document.getElementById('r-allowReassign-state').textContent = restrictions.allowReassign ? 'ON' : 'OFF';
+    const showPopupEl = document.getElementById('r-showPopup');
+    if (showPopupEl) {
+      document.getElementById('r-showPopup-state').textContent = showPopupEl.checked ? 'ON' : 'OFF';
+    }
   }
 
   function stepR(key, delta) {
@@ -1991,6 +2209,23 @@
   }
 
   function onToggleChange() { updateToggleStates(); }
+  function onPopupToggleChange() { updateToggleStates(); }
+  function onPopupContentChange() { /* live edit — saved on Save to Database */ }
+
+  function popupExecCmd(cmd) {
+    document.getElementById('r-popupContent').focus();
+    document.execCommand(cmd, false, null);
+  }
+
+  function applyPopupFontSize(size) {
+    const editor = document.getElementById('r-popupContent');
+    editor.focus();
+    document.execCommand('fontSize', false, '7');
+    editor.querySelectorAll('font[size="7"]').forEach(el => {
+      el.removeAttribute('size');
+      el.style.fontSize = size;
+    });
+  }
 
   function openRestrictionsModal()  { syncModalInputs(); document.getElementById('rest-save-status').textContent = ''; document.getElementById('restrictions-modal').classList.add('open'); }
   function closeRestrictionsModal() { document.getElementById('restrictions-modal').classList.remove('open'); }
@@ -2004,11 +2239,15 @@
       const phd = parseInt(row.querySelector('.split-phd').value, 10) || 0;
       splits.push({ ms, phd });
     });
+    const showPopupEl    = document.getElementById('r-showPopup');
+    const popupContentEl = document.getElementById('r-popupContent');
     const newR = {
       maxTotal:      parseInt(document.getElementById('r-maxTotal').value, 10),
       splits,
       allowReassign: document.getElementById('r-allowReassign').checked,
       clusterLimits: {},
+      showPopup:     showPopupEl    ? showPopupEl.checked        : true,
+      popupContent:  popupContentEl ? popupContentEl.innerHTML.trim() : getDefaultPopupContent(),
     };
     ['power','control','communication','ml'].forEach(cluster => {
       newR.clusterLimits[cluster] = {};
@@ -2023,6 +2262,7 @@
       await db.doc(SETTINGS_DOC).set(newR, { merge: true });
       restrictions = { ...restrictions, ...newR };
       applyRestrictionsToUI();
+      applyPopupSettings();
       statusEl.textContent = 'Saved to database successfully.';
       statusEl.className = 'rest-save-status ok';
       setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'rest-save-status'; }, 3000);
@@ -2569,6 +2809,43 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showAlert('success','✔', `Exported ${assignments.length} record(s) to Excel-compatible CSV.`);
+  }
+
+
+  /* ── POPUP NOTICE MANAGEMENT ── */
+  function getDefaultPopupContent() {
+    return DEFAULT_POPUP_CONTENT || '';
+  }
+
+  function applyPopupSettings() {
+    const overlay = document.getElementById('guidelines-overlay');
+    if (!overlay) return;
+    const show = restrictions.showPopup !== undefined ? restrictions.showPopup : true;
+    if (!show) {
+      overlay.style.display = 'none';
+      return;
+    }
+    // Apply custom content if saved
+    if (restrictions.popupContent) {
+      const bodyEl = overlay.querySelector('.popup-editable-body');
+      if (bodyEl) bodyEl.innerHTML = restrictions.popupContent;
+    }
+    overlay.style.display = 'flex';
+  }
+
+  function previewPopup() {
+    const overlay = document.getElementById('guidelines-overlay');
+    const content = document.getElementById('r-popupContent').value.trim();
+    if (overlay) {
+      const bodyEl = overlay.querySelector('.popup-editable-body');
+      if (bodyEl && content) bodyEl.innerHTML = content;
+      overlay.style.display = 'flex';
+    }
+  }
+
+  function resetPopupDefault() {
+    const el = document.getElementById('r-popupContent');
+    if (el) el.innerHTML = DEFAULT_POPUP_CONTENT;
   }
 
   window.addEventListener('load', () => { loadRestrictions(); loadFromStorage(); });
