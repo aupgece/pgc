@@ -274,6 +274,19 @@
       transition: background .2s;
     }
     #edit-restrictions-btn:hover { background: var(--navy-lt); }
+    #manage-courses-btn {
+      background: var(--plum);
+      color: var(--ivory);
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    #manage-courses-btn:hover { background: #613078; }
     #admin-logout {
       margin-left: auto;
       background: none;
@@ -777,6 +790,64 @@
     .rest-save-status.ok  { color: var(--forest); }
     .rest-save-status.err { color: var(--crimson); }
 
+    /* ── Course Manager modal ── */
+    #course-manager-modal {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(26,39,68,.7); backdrop-filter: blur(3px);
+      align-items: flex-start; justify-content: center;
+      padding: 20px 16px;
+      overflow-y: auto;
+    }
+    #course-manager-modal.open { display: flex; }
+    .cm-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .cm-tab {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em;
+      text-transform: uppercase; padding: 8px 14px; cursor: pointer;
+      background: var(--parchment); color: var(--text-lt); border: 1px solid var(--border);
+      transition: background .15s, color .15s;
+    }
+    .cm-tab.active { background: var(--navy); color: var(--ivory); border-color: var(--navy); }
+    .cm-cluster-select-wrap { margin-bottom: 16px; }
+    .cm-cluster-select-wrap select {
+      width: 100%; padding: 9px 12px; font-family: 'EB Garamond', serif; font-size: 14px;
+      border: 1px solid var(--border); background: #fff; color: var(--text); outline: none;
+    }
+    .cm-add-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .cm-add-row input {
+      font-family: 'EB Garamond', serif; font-size: 13.5px; padding: 9px 10px;
+      border: 1px solid var(--border); background: #fff; color: var(--text); outline: none;
+    }
+    .cm-add-row input.cm-code  { width: 120px; }
+    .cm-add-row input.cm-title { flex: 1; min-width: 180px; }
+    .cm-add-row input:focus { border-color: var(--navy); }
+    .cm-add-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em;
+      text-transform: uppercase; padding: 9px 16px; cursor: pointer;
+      background: var(--forest); color: var(--ivory); border: none; transition: opacity .15s;
+    }
+    .cm-add-btn:hover { opacity: .85; }
+    .cm-list { border: 1px solid var(--border); background: #fff; max-height: 320px; overflow-y: auto; margin-bottom: 6px; }
+    .cm-list-empty { padding: 18px; text-align: center; font-style: italic; color: var(--text-lt); font-size: 13px; }
+    .cm-row {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+      border-bottom: 1px solid var(--parchment);
+    }
+    .cm-row:last-child { border-bottom: none; }
+    .cm-row-text { flex: 1; font-size: 13.5px; color: var(--text); }
+    .cm-row input.cm-edit-code  { width: 110px; }
+    .cm-row input.cm-edit-title { flex: 1; min-width: 140px; }
+    .cm-row-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: .06em;
+      text-transform: uppercase; padding: 5px 10px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--cream); color: var(--text-md); transition: background .15s;
+      white-space: nowrap;
+    }
+    .cm-row-btn:hover { background: var(--parchment); }
+    .cm-row-btn.danger { border-color: rgba(139,26,26,.4); color: var(--crimson); }
+    .cm-row-btn.danger:hover { background: rgba(139,26,26,.08); }
+    .cm-row-btn.save { border-color: var(--forest); color: var(--forest); }
+    .cm-count { font-size: 11px; color: var(--text-lt); font-style: italic; margin-bottom: 12px; }
+
     /* ── FOOTER RULE ── */
     .footer-rule {
       margin-top: 60px;
@@ -853,10 +924,11 @@
     </ul>
 
     <!-- Clusters -->
-    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">The program has <strong>5 clusters</strong>. Within each cluster, an FM may offer:</p>
+    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">The program has <strong>5 clusters</strong> — Electromagnetics &amp; Photonics, Communication &amp; Signal Processing, Power Systems, Control Systems, and Machine Learning &amp; Image Processing — each capped independently. Within each cluster, an FM may offer:</p>
     <ul style="margin:6px 0 16px 20px;padding:0;font-size:15px;color:#2a2a2a;line-height:1.9;">
       <li><strong>1 course</strong> for MSEE Semester 1</li>
       <li><strong>2 courses</strong> for MSEE Semester 3</li>
+      <li><strong>3 courses</strong> for PhD EE Semester 1</li>
     </ul>
 
     <!-- Rationale -->
@@ -989,7 +1061,7 @@
 
     <div class="rest-section">
       <div class="rest-section-title">Cluster Limits per Semester (MSEE &amp; PhD EE)</div>
-      <div class="rest-label" style="margin-bottom:10px;font-size:12px;">Max courses per cluster per semester — set 0 to disable</div>
+      <div class="rest-label" style="margin-bottom:10px;font-size:12px;">Each of the 5 clusters caps independently — MSEE Sem 1: 1/cluster, MSEE Sem 3: 2/cluster, PhD EE Sem 1: 3/cluster (adjustable). Set 0 to disable.</div>
       <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:center;margin-bottom:4px;padding:0 12px;">
         <div></div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lt);text-align:center;">MSEE Sem 1</div>
@@ -997,16 +1069,44 @@
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lt);text-align:center;">PhD EE</div>
       </div>
       <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--gold-dk);text-transform:uppercase;margin-bottom:6px;">⚡ Electromagnetics & Photonics</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('electromagnetics','ms1',-1)">−</button><input type="number" id="cl-electromagnetics-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('electromagnetics','ms1',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('electromagnetics','ms3',-1)">−</button><input type="number" id="cl-electromagnetics-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('electromagnetics','ms3',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('electromagnetics','phd',-1)">−</button><input type="number" id="cl-electromagnetics-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('electromagnetics','phd',+1)">+</button></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--teal);text-transform:uppercase;margin-bottom:6px;">📡 Communication & Signal Processing</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('communication','ms1',-1)">−</button><input type="number" id="cl-communication-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms1',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('communication','ms3',-1)">−</button><input type="number" id="cl-communication-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms3',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('communication','phd',-1)">−</button><input type="number" id="cl-communication-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','phd',+1)">+</button></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin-bottom:6px;">🔋 Power Systems</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
           <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('power','ms1',-1)">−</button><input type="number" id="cl-power-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','ms1',+1)">+</button></div>
+            <div class="stepper"><button onclick="stepCluster('power','ms1',-1)">−</button><input type="number" id="cl-power-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','ms1',+1)">+</button></div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;">
             <div class="stepper"><button onclick="stepCluster('power','ms3',-1)">−</button><input type="number" id="cl-power-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','ms3',+1)">+</button></div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('power','phd',-1)">−</button><input type="number" id="cl-power-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','phd',+1)">+</button></div>
+            <div class="stepper"><button onclick="stepCluster('power','phd',-1)">−</button><input type="number" id="cl-power-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','phd',+1)">+</button></div>
           </div>
         </div>
       </div>
@@ -1014,41 +1114,27 @@
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--forest);text-transform:uppercase;margin-bottom:6px;">🎛️ Control Systems</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
           <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('control','ms1',-1)">−</button><input type="number" id="cl-control-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','ms1',+1)">+</button></div>
+            <div class="stepper"><button onclick="stepCluster('control','ms1',-1)">−</button><input type="number" id="cl-control-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','ms1',+1)">+</button></div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;">
             <div class="stepper"><button onclick="stepCluster('control','ms3',-1)">−</button><input type="number" id="cl-control-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','ms3',+1)">+</button></div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('control','phd',-1)">−</button><input type="number" id="cl-control-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','phd',+1)">+</button></div>
+            <div class="stepper"><button onclick="stepCluster('control','phd',-1)">−</button><input type="number" id="cl-control-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','phd',+1)">+</button></div>
           </div>
         </div>
       </div>
       <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--teal);text-transform:uppercase;margin-bottom:6px;">📡 Communication</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--plum);text-transform:uppercase;margin-bottom:6px;">🤖 Machine Learning & Image Processing</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
           <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('communication','ms1',-1)">−</button><input type="number" id="cl-communication-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms1',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('communication','ms3',-1)">−</button><input type="number" id="cl-communication-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms3',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('communication','phd',-1)">−</button><input type="number" id="cl-communication-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','phd',+1)">+</button></div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--plum);text-transform:uppercase;margin-bottom:6px;">🤖 Machine Learning</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('ml','ms1',-1)">−</button><input type="number" id="cl-ml-ms1" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','ms1',+1)">+</button></div>
+            <div class="stepper"><button onclick="stepCluster('ml','ms1',-1)">−</button><input type="number" id="cl-ml-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','ms1',+1)">+</button></div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;">
             <div class="stepper"><button onclick="stepCluster('ml','ms3',-1)">−</button><input type="number" id="cl-ml-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','ms3',+1)">+</button></div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('ml','phd',-1)">−</button><input type="number" id="cl-ml-phd" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','phd',+1)">+</button></div>
+            <div class="stepper"><button onclick="stepCluster('ml','phd',-1)">−</button><input type="number" id="cl-ml-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','phd',+1)">+</button></div>
           </div>
         </div>
       </div>
@@ -1179,6 +1265,48 @@
   </div>
 </div>
 
+<!-- Course Manager Modal -->
+<div id="course-manager-modal" role="dialog" aria-modal="true">
+  <div class="rest-box" style="max-width:640px;">
+    <div class="rest-title">Manage Courses</div>
+    <div class="rest-sub">Add, edit, or remove courses in any cluster — for MSEE Sem 1, MSEE Sem 3, and PhD EE.</div>
+
+    <!-- Program tabs -->
+    <div class="cm-tabs" id="cm-program-tabs">
+      <div class="cm-tab" data-program="ms1" onclick="switchCMProgram('ms1')">MSEE Sem 1</div>
+      <div class="cm-tab" data-program="ms3" onclick="switchCMProgram('ms3')">MSEE Sem 3</div>
+      <div class="cm-tab" data-program="phd" onclick="switchCMProgram('phd')">PhD EE Sem 1</div>
+    </div>
+
+    <!-- Cluster selector -->
+    <div class="cm-cluster-select-wrap">
+      <select id="cm-cluster-select" onchange="switchCMCluster(this.value)">
+        <option value="electromagnetics">⚡ Electromagnetics &amp; Photonics</option>
+        <option value="communication">📡 Communication &amp; Signal Processing</option>
+        <option value="power">🔋 Power Systems</option>
+        <option value="control">🎛️ Control Systems</option>
+        <option value="ml">🤖 Machine Learning &amp; Image Processing</option>
+      </select>
+    </div>
+
+    <!-- Add new course -->
+    <div class="cm-add-row">
+      <input type="text" class="cm-code"  id="cm-new-code"  placeholder="Code, e.g. EE-890"/>
+      <input type="text" class="cm-title" id="cm-new-title" placeholder="Course title"/>
+      <button class="cm-add-btn" onclick="addCMCourse()">+ Add Course</button>
+    </div>
+
+    <div class="cm-count" id="cm-count"></div>
+    <div class="cm-list" id="cm-list"></div>
+
+    <div class="rest-save-status" id="cm-save-status"></div>
+    <div class="rest-actions">
+      <button class="rest-btn save" onclick="saveCourseCatalog()">Save to Database</button>
+      <button class="rest-btn close" onclick="closeCourseManagerModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Admin Login Modal -->
 <div id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-text">
   <div class="modal-box">
@@ -1225,6 +1353,7 @@
     <strong>Administrator Mode Active</strong>
     <span>— Assignment deletion and modification enabled</span>
     <button id="edit-restrictions-btn" onclick="openRestrictionsModal()">Edit Restrictions</button>
+    <button id="manage-courses-btn" onclick="openCourseManagerModal()">Manage Courses</button>
     <!-- Override toggle -->
     <div style="display:flex;align-items:center;gap:8px;padding:4px 12px;border:1px solid rgba(139,26,26,.35);background:rgba(139,26,26,.05);">
       <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
@@ -1322,86 +1451,6 @@
         <div class="sw">
           <select id="sel-ms1" onchange="onMSChange('ms1')">
             <option value="">— Select Course —</option>
-            <optgroup label="⚡ ELECTROMAGNETICS &amp; PHOTONICS">
-              <option data-cluster="power">EE-611 — Electromagnetic Fields</option>
-              <option data-cluster="power">EE-613 — Advanced Optics</option>
-              <option data-cluster="power">EE-614 — Optical Simulation Methods</option>
-              <option data-cluster="power">EE-615 — Antenna Systems</option>
-              <option data-cluster="power">EE-711 — Array Signal Processing</option>
-              <option data-cluster="power">EE-712 — Detection and Estimation Theory</option>
-              <option data-cluster="power">EE-713 — Radar Engineering</option>
-              <option data-cluster="power">EE-714 — Electromagnetic Engineering</option>
-              <option data-cluster="power">EE-715 — Computational Methods of Field Theory</option>
-              <option data-cluster="power">EE-721 — Semiconductor Optoelectronic Devices</option>
-              <option data-cluster="power">EE-722 — Integrated Photonics Circuits Design</option>
-              <option data-cluster="power">EE-725 — Micro and Nano Fabrication Techniques</option>
-              <option data-cluster="power">EE-630 — Intelligent Antenna Systems</option>
-              <option data-cluster="power">EE-716 — Advanced Microwave Engineering</option>
-              <option data-cluster="power">EE-717 — Antennas for 5G and Beyond</option>
-            </optgroup>
-            <optgroup label="📡 COMMUNICATION &amp; SIGNAL PROCESSING">
-              <option data-cluster="communication">EE-632 — Adaptive Filters</option>
-              <option data-cluster="communication">EE-633 — Advanced Digital Communications I</option>
-              <option data-cluster="communication">EE-634 — Advanced Coding Theory</option>
-              <option data-cluster="communication">EE-635 — Satellite Communications</option>
-              <option data-cluster="communication">EE-636 — Advanced Mobile Communications</option>
-              <option data-cluster="communication">EE-637 — Lasers and Optical Sources</option>
-              <option data-cluster="communication">EE-638 — Photo-detectors</option>
-              <option data-cluster="communication">EE-731 — Optimization Techniques</option>
-              <option data-cluster="communication">EE-732 — Advanced Digital Communications II</option>
-              <option data-cluster="communication">EE-733 — Information Theory</option>
-              <option data-cluster="communication">EE-734 — Multimedia Communications</option>
-              <option data-cluster="communication">EE-735 — Optical Waveguide Design</option>
-              <option data-cluster="communication">EE-726 — Telecommunication &amp; Switching Principles</option>
-              <option data-cluster="communication">EE-618 — Digital Telephony</option>
-              <option data-cluster="communication">EE-619 — Telecommunication Network Management</option>
-              <option data-cluster="communication">EE-623 — Wireless Sensor Networks</option>
-            </optgroup>
-            <optgroup label="🔋 POWER SYSTEMS">
-              <option data-cluster="power">EE-656 — Advanced Power Electronics</option>
-              <option data-cluster="power">EE-659 — Power Systems Component Modelling</option>
-              <option data-cluster="power">EE-751 — Power Electronics for Power Systems</option>
-              <option data-cluster="power">EE-760 — Advanced High Voltage Engineering and Breakdown Theory</option>
-              <option data-cluster="power">EE-761 — Power System State Estimation</option>
-            </optgroup>
-            <optgroup label="🎛️ CONTROL SYSTEMS">
-              <option data-cluster="control">EE-652 — Digital Control Systems</option>
-              <option data-cluster="control">EE-653 — System Identification</option>
-              <option data-cluster="control">EE-654 — Adaptive Control</option>
-              <option data-cluster="control">EE-655 — Real-Time Control</option>
-              <option data-cluster="control">EE-657 — Evolutionary Engineering Optimization</option>
-              <option data-cluster="control">EE-752 — Advanced Neural Networks</option>
-              <option data-cluster="control">EE-753 — Intelligent Control</option>
-              <option data-cluster="control">EE-754 — Advanced Robotics and Control</option>
-              <option data-cluster="control">EE-755 — Optimal Control</option>
-              <option data-cluster="control">EE-756 — Robust Control</option>
-              <option data-cluster="control">EE-757 — Sliding Mode Control</option>
-              <option data-cluster="control">EE-758 — Dynamics and Controls of Electrical Machines</option>
-              <option data-cluster="control">EE-759 — Special Topics in Intelligent Systems and Control</option>
-            </optgroup>
-            <optgroup label="🤖 MACHINE LEARNING &amp; IMAGE PROCESSING">
-              <option data-cluster="ml">EE-671 — Digital Image Processing</option>
-              <option data-cluster="ml">EE-672 — Data Mining</option>
-              <option data-cluster="ml">EE-673 — Advanced Digital Image Processing</option>
-              <option data-cluster="ml">EE-771 — Pattern Recognition</option>
-              <option data-cluster="ml">EE-723 — Signal Processing for Machine Learning</option>
-              <option data-cluster="ml">EE-772 — Machine Learning</option>
-              <option data-cluster="ml">EE-773 — Computer Vision</option>
-              <option data-cluster="ml">EE-774 — Medical Imaging</option>
-              <option data-cluster="ml">EE-775 — Satellite Imaging</option>
-              <option data-cluster="ml">EE-776 — Visual Perception</option>
-              <option data-cluster="ml">EE-777 — Compressive Sensing</option>
-              <option data-cluster="ml">EE-778 — Graphical Models</option>
-              <option data-cluster="ml">EE-779 — Computational Intelligence</option>
-              <option data-cluster="ml">EE-781 — Advanced Computer Architecture</option>
-              <option data-cluster="ml">EE-782 — Advanced Operating Systems</option>
-              <option data-cluster="ml">EE-783 — High Performance Scientific Computing</option>
-              <option data-cluster="ml">EE-718 — Internet of Things and Smart Systems</option>
-              <option data-cluster="ml">EE-719 — Parallel Computing</option>
-              <option data-cluster="ml">EE-720 — Advanced Computer Networks</option>
-              <option data-cluster="ml">EE-621 — Internet Architectures and Protocols</option>
-              <option data-cluster="ml">EE-784 — Cyber-Physical Systems Modelling</option>
-            </optgroup>
           </select>
         </div>
         <div class="inline-notice" id="notice-ms1"></div>
@@ -1431,86 +1480,6 @@
         <div class="sw">
           <select id="sel-ms3" onchange="onMSChange('ms3')">
             <option value="">— Select Course —</option>
-            <optgroup label="⚡ ELECTROMAGNETICS &amp; PHOTONICS">
-              <option data-cluster="power">EE-611 — Electromagnetic Fields</option>
-              <option data-cluster="power">EE-613 — Advanced Optics</option>
-              <option data-cluster="power">EE-614 — Optical Simulation Methods</option>
-              <option data-cluster="power">EE-615 — Antenna Systems</option>
-              <option data-cluster="power">EE-711 — Array Signal Processing</option>
-              <option data-cluster="power">EE-712 — Detection and Estimation Theory</option>
-              <option data-cluster="power">EE-713 — Radar Engineering</option>
-              <option data-cluster="power">EE-714 — Electromagnetic Engineering</option>
-              <option data-cluster="power">EE-715 — Computational Methods of Field Theory</option>
-              <option data-cluster="power">EE-721 — Semiconductor Optoelectronic Devices</option>
-              <option data-cluster="power">EE-722 — Integrated Photonics Circuits Design</option>
-              <option data-cluster="power">EE-725 — Micro and Nano Fabrication Techniques</option>
-              <option data-cluster="power">EE-630 — Intelligent Antenna Systems</option>
-              <option data-cluster="power">EE-716 — Advanced Microwave Engineering</option>
-              <option data-cluster="power">EE-717 — Antennas for 5G and Beyond</option>
-            </optgroup>
-            <optgroup label="📡 COMMUNICATION &amp; SIGNAL PROCESSING">
-              <option data-cluster="communication">EE-632 — Adaptive Filters</option>
-              <option data-cluster="communication">EE-633 — Advanced Digital Communications I</option>
-              <option data-cluster="communication">EE-634 — Advanced Coding Theory</option>
-              <option data-cluster="communication">EE-635 — Satellite Communications</option>
-              <option data-cluster="communication">EE-636 — Advanced Mobile Communications</option>
-              <option data-cluster="communication">EE-637 — Lasers and Optical Sources</option>
-              <option data-cluster="communication">EE-638 — Photo-detectors</option>
-              <option data-cluster="communication">EE-731 — Optimization Techniques</option>
-              <option data-cluster="communication">EE-732 — Advanced Digital Communications II</option>
-              <option data-cluster="communication">EE-733 — Information Theory</option>
-              <option data-cluster="communication">EE-734 — Multimedia Communications</option>
-              <option data-cluster="communication">EE-735 — Optical Waveguide Design</option>
-              <option data-cluster="communication">EE-726 — Telecommunication &amp; Switching Principles</option>
-              <option data-cluster="communication">EE-618 — Digital Telephony</option>
-              <option data-cluster="communication">EE-619 — Telecommunication Network Management</option>
-              <option data-cluster="communication">EE-623 — Wireless Sensor Networks</option>
-            </optgroup>
-            <optgroup label="🔋 POWER SYSTEMS">
-              <option data-cluster="power">EE-656 — Advanced Power Electronics</option>
-              <option data-cluster="power">EE-659 — Power Systems Component Modelling</option>
-              <option data-cluster="power">EE-751 — Power Electronics for Power Systems</option>
-              <option data-cluster="power">EE-760 — Advanced High Voltage Engineering and Breakdown Theory</option>
-              <option data-cluster="power">EE-761 — Power System State Estimation</option>
-            </optgroup>
-            <optgroup label="🎛️ CONTROL SYSTEMS">
-              <option data-cluster="control">EE-652 — Digital Control Systems</option>
-              <option data-cluster="control">EE-653 — System Identification</option>
-              <option data-cluster="control">EE-654 — Adaptive Control</option>
-              <option data-cluster="control">EE-655 — Real-Time Control</option>
-              <option data-cluster="control">EE-657 — Evolutionary Engineering Optimization</option>
-              <option data-cluster="control">EE-752 — Advanced Neural Networks</option>
-              <option data-cluster="control">EE-753 — Intelligent Control</option>
-              <option data-cluster="control">EE-754 — Advanced Robotics and Control</option>
-              <option data-cluster="control">EE-755 — Optimal Control</option>
-              <option data-cluster="control">EE-756 — Robust Control</option>
-              <option data-cluster="control">EE-757 — Sliding Mode Control</option>
-              <option data-cluster="control">EE-758 — Dynamics and Controls of Electrical Machines</option>
-              <option data-cluster="control">EE-759 — Special Topics in Intelligent Systems and Control</option>
-            </optgroup>
-            <optgroup label="🤖 MACHINE LEARNING &amp; IMAGE PROCESSING">
-              <option data-cluster="ml">EE-671 — Digital Image Processing</option>
-              <option data-cluster="ml">EE-672 — Data Mining</option>
-              <option data-cluster="ml">EE-673 — Advanced Digital Image Processing</option>
-              <option data-cluster="ml">EE-771 — Pattern Recognition</option>
-              <option data-cluster="ml">EE-723 — Signal Processing for Machine Learning</option>
-              <option data-cluster="ml">EE-772 — Machine Learning</option>
-              <option data-cluster="ml">EE-773 — Computer Vision</option>
-              <option data-cluster="ml">EE-774 — Medical Imaging</option>
-              <option data-cluster="ml">EE-775 — Satellite Imaging</option>
-              <option data-cluster="ml">EE-776 — Visual Perception</option>
-              <option data-cluster="ml">EE-777 — Compressive Sensing</option>
-              <option data-cluster="ml">EE-778 — Graphical Models</option>
-              <option data-cluster="ml">EE-779 — Computational Intelligence</option>
-              <option data-cluster="ml">EE-781 — Advanced Computer Architecture</option>
-              <option data-cluster="ml">EE-782 — Advanced Operating Systems</option>
-              <option data-cluster="ml">EE-783 — High Performance Scientific Computing</option>
-              <option data-cluster="ml">EE-718 — Internet of Things and Smart Systems</option>
-              <option data-cluster="ml">EE-719 — Parallel Computing</option>
-              <option data-cluster="ml">EE-720 — Advanced Computer Networks</option>
-              <option data-cluster="ml">EE-621 — Internet Architectures and Protocols</option>
-              <option data-cluster="ml">EE-784 — Cyber-Physical Systems Modelling</option>
-            </optgroup>
           </select>
         </div>
         <div class="inline-notice" id="notice-ms3"></div>
@@ -1522,116 +1491,6 @@
         <div class="sw">
           <select id="sel-phd" onchange="onPhdChange()">
             <option value="">— Select Course —</option>
-            <optgroup label="⚡ ELECTROMAGNETICS &amp; PHOTONICS">
-              <option data-cluster="power">EE-611 — Electromagnetic Fields</option>
-              <option data-cluster="power">EE-613 — Advanced Optics</option>
-              <option data-cluster="power">EE-614 — Optical Simulation Methods</option>
-              <option data-cluster="power">EE-615 — Antenna Systems</option>
-              <option data-cluster="power">EE-711 — Array Signal Processing</option>
-              <option data-cluster="power">EE-712 — Detection and Estimation Theory</option>
-              <option data-cluster="power">EE-713 — Radar Engineering</option>
-              <option data-cluster="power">EE-714 — Electromagnetic Engineering</option>
-              <option data-cluster="power">EE-715 — Computational Methods of Field Theory</option>
-              <option data-cluster="power">EE-721 — Semiconductor Optoelectronic Devices</option>
-              <option data-cluster="power">EE-722 — Integrated Photonics Circuits Design</option>
-              <option data-cluster="power">EE-725 — Micro and Nano Fabrication Techniques</option>
-              <option data-cluster="power">EE-811 — Advanced Array Signal Processing</option>
-              <option data-cluster="power">EE-813 — Advanced Detection and Estimation Theory</option>
-              <option data-cluster="power">EE-814 — Kalman Filters</option>
-              <option data-cluster="power">EE-817 — Special Topics in Photonics</option>
-              <option data-cluster="power">EE-818 — Special Topics in Lasers and Optics</option>
-              <option data-cluster="power">EE-819 — Special Topics in Radar Systems Engineering</option>
-              <option data-cluster="power">EE-630 — Intelligent Antenna Systems</option>
-              <option data-cluster="power">EE-716 — Advanced Microwave Engineering</option>
-              <option data-cluster="power">EE-717 — Antennas for 5G and Beyond</option>
-            </optgroup>
-            <optgroup label="📡 COMMUNICATION &amp; SIGNAL PROCESSING">
-              <option data-cluster="communication">EE-632 — Adaptive Filters</option>
-              <option data-cluster="communication">EE-633 — Advanced Digital Communications I</option>
-              <option data-cluster="communication">EE-634 — Advanced Coding Theory</option>
-              <option data-cluster="communication">EE-635 — Satellite Communications</option>
-              <option data-cluster="communication">EE-636 — Advanced Mobile Communications</option>
-              <option data-cluster="communication">EE-637 — Lasers and Optical Sources</option>
-              <option data-cluster="communication">EE-638 — Photo-detectors</option>
-              <option data-cluster="communication">EE-731 — Optimization Techniques</option>
-              <option data-cluster="communication">EE-732 — Advanced Digital Communications II</option>
-              <option data-cluster="communication">EE-733 — Information Theory</option>
-              <option data-cluster="communication">EE-734 — Multimedia Communications</option>
-              <option data-cluster="communication">EE-735 — Optical Waveguide Design</option>
-              <option data-cluster="communication">EE-831 — Advanced Wireless Techniques</option>
-              <option data-cluster="communication">EE-832 — Space-Time Coding</option>
-              <option data-cluster="communication">EE-833 — Adaptive Wireless Transceivers</option>
-              <option data-cluster="communication">EE-834 — Statistical Signal Processing</option>
-              <option data-cluster="communication">EE-838 — Special Topics in Signal Processing</option>
-              <option data-cluster="communication">EE-839 — Special Topics in Digital Communication Systems</option>
-              <option data-cluster="communication">EE-726 — Telecommunication &amp; Switching Principles</option>
-              <option data-cluster="communication">EE-827 — Advance Optical Fiber Communication</option>
-              <option data-cluster="communication">EE-618 — Digital Telephony</option>
-              <option data-cluster="communication">EE-619 — Telecommunication Network Management</option>
-              <option data-cluster="communication">EE-623 — Wireless Sensor Networks</option>
-              <option data-cluster="communication">EE-815 — Advanced Topics in Wireless Networks</option>
-            </optgroup>
-            <optgroup label="🔋 POWER SYSTEMS">
-              <option data-cluster="power">EE-656 — Advanced Power Electronics</option>
-              <option data-cluster="power">EE-659 — Power Systems Component Modelling</option>
-              <option data-cluster="power">EE-751 — Power Electronics for Power Systems</option>
-              <option data-cluster="power">EE-760 — Advanced High Voltage Engineering and Breakdown Theory</option>
-              <option data-cluster="power">EE-761 — Power System State Estimation</option>
-              <option data-cluster="power">EE-853 — Power System Operation and Protections</option>
-              <option data-cluster="power">EE-858 — Special Topics in Power and Control</option>
-              <option data-cluster="power">EE-860 — Renewable Power Production and Transportation</option>
-            </optgroup>
-            <optgroup label="🎛️ CONTROL SYSTEMS">
-              <option data-cluster="control">EE-652 — Digital Control Systems</option>
-              <option data-cluster="control">EE-653 — System Identification</option>
-              <option data-cluster="control">EE-654 — Adaptive Control</option>
-              <option data-cluster="control">EE-655 — Real-Time Control</option>
-              <option data-cluster="control">EE-657 — Evolutionary Engineering Optimization</option>
-              <option data-cluster="control">EE-752 — Advanced Neural Networks</option>
-              <option data-cluster="control">EE-753 — Intelligent Control</option>
-              <option data-cluster="control">EE-754 — Advanced Robotics and Control</option>
-              <option data-cluster="control">EE-755 — Optimal Control</option>
-              <option data-cluster="control">EE-756 — Robust Control</option>
-              <option data-cluster="control">EE-757 — Sliding Mode Control</option>
-              <option data-cluster="control">EE-758 — Dynamics and Controls of Electrical Machines</option>
-              <option data-cluster="control">EE-759 — Special Topics in Intelligent Systems and Control</option>
-              <option data-cluster="control">EE-851 — Nonlinear Systems &amp; Control</option>
-              <option data-cluster="control">EE-852 — Advanced Process Control</option>
-              <option data-cluster="control">EE-854 — Advanced Topics in Nature Inspired Optimization Techniques</option>
-              <option data-cluster="control">EE-855 — Advanced Topics in Intelligent Systems and Control</option>
-              <option data-cluster="control">EE-856 — Neuro-Fuzzy Control</option>
-              <option data-cluster="control">EE-857 — Stochastic Control</option>
-              <option data-cluster="control">EE-859 — Special Topics in Control Systems</option>
-            </optgroup>
-            <optgroup label="🤖 MACHINE LEARNING &amp; IMAGE PROCESSING">
-              <option data-cluster="ml">EE-671 — Digital Image Processing</option>
-              <option data-cluster="ml">EE-672 — Data Mining</option>
-              <option data-cluster="ml">EE-673 — Advanced Digital Image Processing</option>
-              <option data-cluster="ml">EE-771 — Pattern Recognition</option>
-              <option data-cluster="ml">EE-723 — Signal Processing for Machine Learning</option>
-              <option data-cluster="ml">EE-772 — Machine Learning</option>
-              <option data-cluster="ml">EE-773 — Computer Vision</option>
-              <option data-cluster="ml">EE-774 — Medical Imaging</option>
-              <option data-cluster="ml">EE-775 — Satellite Imaging</option>
-              <option data-cluster="ml">EE-776 — Visual Perception</option>
-              <option data-cluster="ml">EE-777 — Compressive Sensing</option>
-              <option data-cluster="ml">EE-778 — Graphical Models</option>
-              <option data-cluster="ml">EE-779 — Computational Intelligence</option>
-              <option data-cluster="ml">EE-781 — Advanced Computer Architecture</option>
-              <option data-cluster="ml">EE-782 — Advanced Operating Systems</option>
-              <option data-cluster="ml">EE-783 — High Performance Scientific Computing</option>
-              <option data-cluster="ml">EE-871 — Special Topics in Pattern Recognition</option>
-              <option data-cluster="ml">EE-872 — Special Topics in Signal and Image Processing</option>
-              <option data-cluster="ml">EE-873 — Special Topics in Machine Learning</option>
-              <option data-cluster="ml">EE-874 — Advanced Computer Vision</option>
-              <option data-cluster="ml">EE-884 — Parallel Computer Architecture</option>
-              <option data-cluster="ml">EE-718 — Internet of Things and Smart Systems</option>
-              <option data-cluster="ml">EE-719 — Parallel Computing</option>
-              <option data-cluster="ml">EE-720 — Advanced Computer Networks</option>
-              <option data-cluster="ml">EE-621 — Internet Architectures and Protocols</option>
-              <option data-cluster="ml">EE-820 — Selected Topics in Internet of Things (IoT)</option>
-              <option data-cluster="ml">EE-784 — Cyber-Physical Systems Modelling</option>
-            </optgroup>
           </select>
         </div>
         <div class="inline-notice" id="notice-phd"></div>
@@ -1684,14 +1543,18 @@
   const db = firebase.firestore();
   const COL = 'faculty-assignments-v1';
   const SETTINGS_DOC = 'settings/restrictions';
+  const COURSES_DOC  = 'settings/courses';
 
   // maxTotal = total courses allowed; splits = array of {ms,phd} valid combinations
-  // clusterLimits = { power:{ms1,ms3,phd}, communication:{ms1,ms3,phd}, ml:{ms1,ms3,phd} }
+  // clusterLimits = { electromagnetics:{ms1,ms3,phd}, communication:{...}, power:{...}, control:{...}, ml:{...} }
+  // Each of the 5 clusters caps independently: MSEE Sem 1 = 1 course/cluster, MSEE Sem 3 = 2/cluster, PhD EE Sem 1 = 3/cluster.
+  const DEFAULT_CAP_BY_CAT = { ms1: 1, ms3: 2, phd: 3 };
   const DEFAULT_CLUSTER_LIMITS = {
-    power:         { ms1: 2, ms3: 2, phd: 2 },
-    control:       { ms1: 2, ms3: 2, phd: 2 },
-    communication: { ms1: 2, ms3: 2, phd: 2 },
-    ml:            { ms1: 2, ms3: 2, phd: 2 },
+    electromagnetics: { ms1: 1, ms3: 2, phd: 3 },
+    communication:    { ms1: 1, ms3: 2, phd: 3 },
+    power:            { ms1: 1, ms3: 2, phd: 3 },
+    control:          { ms1: 1, ms3: 2, phd: 3 },
+    ml:               { ms1: 1, ms3: 2, phd: 3 },
   };
   let restrictions = {
     maxTotal: 2,
@@ -1723,10 +1586,11 @@
     </ul>
 
     <!-- Clusters -->
-    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">The program has <strong>5 clusters</strong>. Within each cluster, an FM may offer:</p>
+    <p style="font-size:15px;color:#1a1a1a;margin:0 0 6px;">The program has <strong>5 clusters</strong> — Electromagnetics &amp; Photonics, Communication &amp; Signal Processing, Power Systems, Control Systems, and Machine Learning &amp; Image Processing — each capped independently. Within each cluster, an FM may offer:</p>
     <ul style="margin:6px 0 16px 20px;padding:0;font-size:15px;color:#2a2a2a;line-height:1.9;">
       <li><strong>1 course</strong> for MSEE Semester 1</li>
       <li><strong>2 courses</strong> for MSEE Semester 3</li>
+      <li><strong>3 courses</strong> for PhD EE Semester 1</li>
     </ul>
 
     <!-- Rationale -->
@@ -1739,113 +1603,319 @@
     <p style="font-size:13px;color:#6a6055;font-style:italic;margin:0 0 22px;line-height:1.6;">This policy ensures a balance between student choice and sustainable class strength.</p>
     `;
 
-  const COURSE_CLUSTER = {
-    // Electromagnetics & Photonics
-    'EE-611 — Electromagnetic Fields':                                    'power',
-    'EE-613 — Advanced Optics':                                           'power',
-    'EE-614 — Optical Simulation Methods':                                'power',
-    'EE-615 — Antenna Systems':                                           'power',
-    'EE-711 — Array Signal Processing':                                   'power',
-    'EE-712 — Detection and Estimation Theory':                           'power',
-    'EE-713 — Radar Engineering':                                         'power',
-    'EE-714 — Electromagnetic Engineering':                               'power',
-    'EE-715 — Computational Methods of Field Theory':                     'power',
-    'EE-721 — Semiconductor Optoelectronic Devices':                      'power',
-    'EE-722 — Integrated Photonics Circuits Design':                      'power',
-    'EE-725 — Micro and Nano Fabrication Techniques':                     'power',
-    'EE-811 — Advanced Array Signal Processing':                          'power',
-    'EE-813 — Advanced Detection and Estimation Theory':                  'power',
-    'EE-814 — Kalman Filters':                                            'power',
-    'EE-817 — Special Topics in Photonics':                               'power',
-    'EE-818 — Special Topics in Lasers and Optics':                       'power',
-    'EE-819 — Special Topics in Radar Systems Engineering':               'power',
-    'EE-630 — Intelligent Antenna Systems':                               'power',
-    'EE-716 — Advanced Microwave Engineering':                            'power',
-    'EE-717 — Antennas for 5G and Beyond':                                'power',
-    // Communication & Signal Processing
-    'EE-632 — Adaptive Filters':                                          'communication',
-    'EE-633 — Advanced Digital Communications I':                         'communication',
-    'EE-634 — Advanced Coding Theory':                                    'communication',
-    'EE-635 — Satellite Communications':                                  'communication',
-    'EE-636 — Advanced Mobile Communications':                            'communication',
-    'EE-637 — Lasers and Optical Sources':                                'communication',
-    'EE-638 — Photo-detectors':                                           'communication',
-    'EE-731 — Optimization Techniques':                                   'communication',
-    'EE-732 — Advanced Digital Communications II':                        'communication',
-    'EE-733 — Information Theory':                                        'communication',
-    'EE-734 — Multimedia Communications':                                 'communication',
-    'EE-735 — Optical Waveguide Design':                                  'communication',
-    'EE-831 — Advanced Wireless Techniques':                              'communication',
-    'EE-832 — Space-Time Coding':                                         'communication',
-    'EE-833 — Adaptive Wireless Transceivers':                            'communication',
-    'EE-834 — Statistical Signal Processing':                             'communication',
-    'EE-838 — Special Topics in Signal Processing':                       'communication',
-    'EE-839 — Special Topics in Digital Communication Systems':           'communication',
-    'EE-726 — Telecommunication & Switching Principles':                  'communication',
-    'EE-827 — Advance Optical Fiber Communication':                       'communication',
-    'EE-618 — Digital Telephony':                                         'communication',
-    'EE-619 — Telecommunication Network Management':                      'communication',
-    'EE-623 — Wireless Sensor Networks':                                  'communication',
-    'EE-815 — Advanced Topics in Wireless Networks':                      'communication',
-    // Power & Control Systems
-    'EE-652 — Digital Control Systems':                                   'control',
-    'EE-653 — System Identification':                                     'control',
-    'EE-654 — Adaptive Control':                                          'control',
-    'EE-655 — Real-Time Control':                                         'control',
-    'EE-656 — Advanced Power Electronics':                                'power',
-    'EE-657 — Evolutionary Engineering Optimization':                     'control',
-    'EE-659 — Power Systems Component Modelling':                         'power',
-    'EE-751 — Power Electronics for Power Systems':                       'power',
-    'EE-752 — Advanced Neural Networks':                                  'control',
-    'EE-753 — Intelligent Control':                                       'control',
-    'EE-754 — Advanced Robotics and Control':                             'control',
-    'EE-755 — Optimal Control':                                           'control',
-    'EE-756 — Robust Control':                                            'control',
-    'EE-757 — Sliding Mode Control':                                      'control',
-    'EE-758 — Dynamics and Controls of Electrical Machines':              'control',
-    'EE-759 — Special Topics in Intelligent Systems and Control':         'control',
-    'EE-760 — Advanced High Voltage Engineering and Breakdown Theory':    'power',
-    'EE-761 — Power System State Estimation':                             'power',
-    'EE-851 — Nonlinear Systems & Control':                               'control',
-    'EE-852 — Advanced Process Control':                                  'control',
-    'EE-853 — Power System Operation and Protections':                    'power',
-    'EE-854 — Advanced Topics in Nature Inspired Optimization Techniques':'control',
-    'EE-855 — Advanced Topics in Intelligent Systems and Control':        'control',
-    'EE-856 — Neuro-Fuzzy Control':                                       'control',
-    'EE-857 — Stochastic Control':                                        'control',
-    'EE-858 — Special Topics in Power and Control':                       'control',
-    'EE-859 — Special Topics in Control Systems':                         'control',
-    'EE-860 — Renewable Power Production and Transportation':             'power',
-    // Machine Learning & Image Processing
-    'EE-671 — Digital Image Processing':                                  'ml',
-    'EE-672 — Data Mining':                                               'ml',
-    'EE-673 — Advanced Digital Image Processing':                         'ml',
-    'EE-771 — Pattern Recognition':                                       'ml',
-    'EE-723 — Signal Processing for Machine Learning':                    'ml',
-    'EE-772 — Machine Learning':                                          'ml',
-    'EE-773 — Computer Vision':                                           'ml',
-    'EE-774 — Medical Imaging':                                           'ml',
-    'EE-775 — Satellite Imaging':                                         'ml',
-    'EE-776 — Visual Perception':                                         'ml',
-    'EE-777 — Compressive Sensing':                                       'ml',
-    'EE-778 — Graphical Models':                                          'ml',
-    'EE-779 — Computational Intelligence':                                'ml',
-    'EE-781 — Advanced Computer Architecture':                            'ml',
-    'EE-782 — Advanced Operating Systems':                                'ml',
-    'EE-783 — High Performance Scientific Computing':                     'ml',
-    'EE-871 — Special Topics in Pattern Recognition':                     'ml',
-    'EE-872 — Special Topics in Signal and Image Processing':             'ml',
-    'EE-873 — Special Topics in Machine Learning':                        'ml',
-    'EE-874 — Advanced Computer Vision':                                  'ml',
-    'EE-884 — Parallel Computer Architecture':                            'ml',
-    'EE-718 — Internet of Things and Smart Systems':                      'ml',
-    'EE-719 — Parallel Computing':                                        'ml',
-    'EE-720 — Advanced Computer Networks':                                'ml',
-    'EE-621 — Internet Architectures and Protocols':                      'ml',
-    'EE-820 — Selected Topics in Internet of Things (IoT)':               'ml',
-    'EE-784 — Cyber-Physical Systems Modelling':                          'ml',
+  const DEFAULT_COURSE_CATALOG = {
+    ms1: {
+      electromagnetics: [
+        "EE-611 — Electromagnetic Fields",
+        "EE-613 — Advanced Optics",
+        "EE-614 — Optical Simulation Methods",
+        "EE-615 — Antenna Systems",
+        "EE-711 — Array Signal Processing",
+        "EE-712 — Detection and Estimation Theory",
+        "EE-713 — Radar Engineering",
+        "EE-714 — Electromagnetic Engineering",
+        "EE-715 — Computational Methods of Field Theory",
+        "EE-721 — Semiconductor Optoelectronic Devices",
+        "EE-722 — Integrated Photonics Circuits Design",
+        "EE-725 — Micro and Nano Fabrication Techniques",
+        "EE-630 — Intelligent Antenna Systems",
+        "EE-716 — Advanced Microwave Engineering",
+        "EE-717 — Antennas for 5G and Beyond",
+      ],
+      communication: [
+        "EE-632 — Adaptive Filters",
+        "EE-633 — Advanced Digital Communications I",
+        "EE-634 — Advanced Coding Theory",
+        "EE-635 — Satellite Communications",
+        "EE-636 — Advanced Mobile Communications",
+        "EE-637 — Lasers and Optical Sources",
+        "EE-638 — Photo-detectors",
+        "EE-731 — Optimization Techniques",
+        "EE-732 — Advanced Digital Communications II",
+        "EE-733 — Information Theory",
+        "EE-734 — Multimedia Communications",
+        "EE-735 — Optical Waveguide Design",
+        "EE-726 — Telecommunication & Switching Principles",
+        "EE-618 — Digital Telephony",
+        "EE-619 — Telecommunication Network Management",
+        "EE-623 — Wireless Sensor Networks",
+      ],
+      power: [
+        "EE-656 — Advanced Power Electronics",
+        "EE-659 — Power Systems Component Modelling",
+        "EE-751 — Power Electronics for Power Systems",
+        "EE-760 — Advanced High Voltage Engineering and Breakdown Theory",
+        "EE-761 — Power System State Estimation",
+      ],
+      control: [
+        "EE-652 — Digital Control Systems",
+        "EE-653 — System Identification",
+        "EE-654 — Adaptive Control",
+        "EE-655 — Real-Time Control",
+        "EE-657 — Evolutionary Engineering Optimization",
+        "EE-752 — Advanced Neural Networks",
+        "EE-753 — Intelligent Control",
+        "EE-754 — Advanced Robotics and Control",
+        "EE-755 — Optimal Control",
+        "EE-756 — Robust Control",
+        "EE-757 — Sliding Mode Control",
+        "EE-758 — Dynamics and Controls of Electrical Machines",
+        "EE-759 — Special Topics in Intelligent Systems and Control",
+      ],
+      ml: [
+        "EE-671 — Digital Image Processing",
+        "EE-672 — Data Mining",
+        "EE-673 — Advanced Digital Image Processing",
+        "EE-771 — Pattern Recognition",
+        "EE-723 — Signal Processing for Machine Learning",
+        "EE-772 — Machine Learning",
+        "EE-773 — Computer Vision",
+        "EE-774 — Medical Imaging",
+        "EE-775 — Satellite Imaging",
+        "EE-776 — Visual Perception",
+        "EE-777 — Compressive Sensing",
+        "EE-778 — Graphical Models",
+        "EE-779 — Computational Intelligence",
+        "EE-781 — Advanced Computer Architecture",
+        "EE-782 — Advanced Operating Systems",
+        "EE-783 — High Performance Scientific Computing",
+        "EE-718 — Internet of Things and Smart Systems",
+        "EE-719 — Parallel Computing",
+        "EE-720 — Advanced Computer Networks",
+        "EE-621 — Internet Architectures and Protocols",
+        "EE-784 — Cyber-Physical Systems Modelling",
+      ],
+    },
+    ms3: {
+      electromagnetics: [
+        "EE-611 — Electromagnetic Fields",
+        "EE-613 — Advanced Optics",
+        "EE-614 — Optical Simulation Methods",
+        "EE-615 — Antenna Systems",
+        "EE-711 — Array Signal Processing",
+        "EE-712 — Detection and Estimation Theory",
+        "EE-713 — Radar Engineering",
+        "EE-714 — Electromagnetic Engineering",
+        "EE-715 — Computational Methods of Field Theory",
+        "EE-721 — Semiconductor Optoelectronic Devices",
+        "EE-722 — Integrated Photonics Circuits Design",
+        "EE-725 — Micro and Nano Fabrication Techniques",
+        "EE-630 — Intelligent Antenna Systems",
+        "EE-716 — Advanced Microwave Engineering",
+        "EE-717 — Antennas for 5G and Beyond",
+      ],
+      communication: [
+        "EE-632 — Adaptive Filters",
+        "EE-633 — Advanced Digital Communications I",
+        "EE-634 — Advanced Coding Theory",
+        "EE-635 — Satellite Communications",
+        "EE-636 — Advanced Mobile Communications",
+        "EE-637 — Lasers and Optical Sources",
+        "EE-638 — Photo-detectors",
+        "EE-731 — Optimization Techniques",
+        "EE-732 — Advanced Digital Communications II",
+        "EE-733 — Information Theory",
+        "EE-734 — Multimedia Communications",
+        "EE-735 — Optical Waveguide Design",
+        "EE-726 — Telecommunication & Switching Principles",
+        "EE-618 — Digital Telephony",
+        "EE-619 — Telecommunication Network Management",
+        "EE-623 — Wireless Sensor Networks",
+      ],
+      power: [
+        "EE-656 — Advanced Power Electronics",
+        "EE-659 — Power Systems Component Modelling",
+        "EE-751 — Power Electronics for Power Systems",
+        "EE-760 — Advanced High Voltage Engineering and Breakdown Theory",
+        "EE-761 — Power System State Estimation",
+      ],
+      control: [
+        "EE-652 — Digital Control Systems",
+        "EE-653 — System Identification",
+        "EE-654 — Adaptive Control",
+        "EE-655 — Real-Time Control",
+        "EE-657 — Evolutionary Engineering Optimization",
+        "EE-752 — Advanced Neural Networks",
+        "EE-753 — Intelligent Control",
+        "EE-754 — Advanced Robotics and Control",
+        "EE-755 — Optimal Control",
+        "EE-756 — Robust Control",
+        "EE-757 — Sliding Mode Control",
+        "EE-758 — Dynamics and Controls of Electrical Machines",
+        "EE-759 — Special Topics in Intelligent Systems and Control",
+      ],
+      ml: [
+        "EE-671 — Digital Image Processing",
+        "EE-672 — Data Mining",
+        "EE-673 — Advanced Digital Image Processing",
+        "EE-771 — Pattern Recognition",
+        "EE-723 — Signal Processing for Machine Learning",
+        "EE-772 — Machine Learning",
+        "EE-773 — Computer Vision",
+        "EE-774 — Medical Imaging",
+        "EE-775 — Satellite Imaging",
+        "EE-776 — Visual Perception",
+        "EE-777 — Compressive Sensing",
+        "EE-778 — Graphical Models",
+        "EE-779 — Computational Intelligence",
+        "EE-781 — Advanced Computer Architecture",
+        "EE-782 — Advanced Operating Systems",
+        "EE-783 — High Performance Scientific Computing",
+        "EE-718 — Internet of Things and Smart Systems",
+        "EE-719 — Parallel Computing",
+        "EE-720 — Advanced Computer Networks",
+        "EE-621 — Internet Architectures and Protocols",
+        "EE-784 — Cyber-Physical Systems Modelling",
+      ],
+    },
+    phd: {
+      electromagnetics: [
+        "EE-611 — Electromagnetic Fields",
+        "EE-613 — Advanced Optics",
+        "EE-614 — Optical Simulation Methods",
+        "EE-615 — Antenna Systems",
+        "EE-711 — Array Signal Processing",
+        "EE-712 — Detection and Estimation Theory",
+        "EE-713 — Radar Engineering",
+        "EE-714 — Electromagnetic Engineering",
+        "EE-715 — Computational Methods of Field Theory",
+        "EE-721 — Semiconductor Optoelectronic Devices",
+        "EE-722 — Integrated Photonics Circuits Design",
+        "EE-725 — Micro and Nano Fabrication Techniques",
+        "EE-811 — Advanced Array Signal Processing",
+        "EE-813 — Advanced Detection and Estimation Theory",
+        "EE-814 — Kalman Filters",
+        "EE-817 — Special Topics in Photonics",
+        "EE-818 — Special Topics in Lasers and Optics",
+        "EE-819 — Special Topics in Radar Systems Engineering",
+        "EE-630 — Intelligent Antenna Systems",
+        "EE-716 — Advanced Microwave Engineering",
+        "EE-717 — Antennas for 5G and Beyond",
+      ],
+      communication: [
+        "EE-632 — Adaptive Filters",
+        "EE-633 — Advanced Digital Communications I",
+        "EE-634 — Advanced Coding Theory",
+        "EE-635 — Satellite Communications",
+        "EE-636 — Advanced Mobile Communications",
+        "EE-637 — Lasers and Optical Sources",
+        "EE-638 — Photo-detectors",
+        "EE-731 — Optimization Techniques",
+        "EE-732 — Advanced Digital Communications II",
+        "EE-733 — Information Theory",
+        "EE-734 — Multimedia Communications",
+        "EE-735 — Optical Waveguide Design",
+        "EE-831 — Advanced Wireless Techniques",
+        "EE-832 — Space-Time Coding",
+        "EE-833 — Adaptive Wireless Transceivers",
+        "EE-834 — Statistical Signal Processing",
+        "EE-838 — Special Topics in Signal Processing",
+        "EE-839 — Special Topics in Digital Communication Systems",
+        "EE-726 — Telecommunication & Switching Principles",
+        "EE-827 — Advance Optical Fiber Communication",
+        "EE-618 — Digital Telephony",
+        "EE-619 — Telecommunication Network Management",
+        "EE-623 — Wireless Sensor Networks",
+        "EE-815 — Advanced Topics in Wireless Networks",
+      ],
+      power: [
+        "EE-656 — Advanced Power Electronics",
+        "EE-659 — Power Systems Component Modelling",
+        "EE-751 — Power Electronics for Power Systems",
+        "EE-760 — Advanced High Voltage Engineering and Breakdown Theory",
+        "EE-761 — Power System State Estimation",
+        "EE-853 — Power System Operation and Protections",
+        "EE-858 — Special Topics in Power and Control",
+        "EE-860 — Renewable Power Production and Transportation",
+      ],
+      control: [
+        "EE-652 — Digital Control Systems",
+        "EE-653 — System Identification",
+        "EE-654 — Adaptive Control",
+        "EE-655 — Real-Time Control",
+        "EE-657 — Evolutionary Engineering Optimization",
+        "EE-752 — Advanced Neural Networks",
+        "EE-753 — Intelligent Control",
+        "EE-754 — Advanced Robotics and Control",
+        "EE-755 — Optimal Control",
+        "EE-756 — Robust Control",
+        "EE-757 — Sliding Mode Control",
+        "EE-758 — Dynamics and Controls of Electrical Machines",
+        "EE-759 — Special Topics in Intelligent Systems and Control",
+        "EE-851 — Nonlinear Systems & Control",
+        "EE-852 — Advanced Process Control",
+        "EE-854 — Advanced Topics in Nature Inspired Optimization Techniques",
+        "EE-855 — Advanced Topics in Intelligent Systems and Control",
+        "EE-856 — Neuro-Fuzzy Control",
+        "EE-857 — Stochastic Control",
+        "EE-859 — Special Topics in Control Systems",
+      ],
+      ml: [
+        "EE-671 — Digital Image Processing",
+        "EE-672 — Data Mining",
+        "EE-673 — Advanced Digital Image Processing",
+        "EE-771 — Pattern Recognition",
+        "EE-723 — Signal Processing for Machine Learning",
+        "EE-772 — Machine Learning",
+        "EE-773 — Computer Vision",
+        "EE-774 — Medical Imaging",
+        "EE-775 — Satellite Imaging",
+        "EE-776 — Visual Perception",
+        "EE-777 — Compressive Sensing",
+        "EE-778 — Graphical Models",
+        "EE-779 — Computational Intelligence",
+        "EE-781 — Advanced Computer Architecture",
+        "EE-782 — Advanced Operating Systems",
+        "EE-783 — High Performance Scientific Computing",
+        "EE-871 — Special Topics in Pattern Recognition",
+        "EE-872 — Special Topics in Signal and Image Processing",
+        "EE-873 — Special Topics in Machine Learning",
+        "EE-874 — Advanced Computer Vision",
+        "EE-884 — Parallel Computer Architecture",
+        "EE-718 — Internet of Things and Smart Systems",
+        "EE-719 — Parallel Computing",
+        "EE-720 — Advanced Computer Networks",
+        "EE-621 — Internet Architectures and Protocols",
+        "EE-820 — Selected Topics in Internet of Things (IoT)",
+        "EE-784 — Cyber-Physical Systems Modelling",
+      ],
+    },
   };
-  const CLUSTER_LABEL = { power: '⚡ Electromagnetics & Power Systems', control: '🎛️ Control Systems', communication: '📡 Communication & Signal Processing', ml: '🤖 Machine Learning & Image Processing' };
+
+  // Display order of course groups in the dropdowns / course manager (5 groups).
+  const CLUSTER_ORDER = ['electromagnetics','communication','power','control','ml'];
+
+  // Each of the 5 course groups is its own independent cluster for capping purposes —
+  // Electromagnetics & Photonics and Power Systems are separate clusters with separate caps.
+  const VALIDATION_CLUSTER = { electromagnetics: 'electromagnetics', power: 'power', communication: 'communication', control: 'control', ml: 'ml' };
+
+  // Live course catalog (editable by admins, synced to Firestore doc settings/courses)
+  let COURSE_CATALOG = JSON.parse(JSON.stringify(DEFAULT_COURSE_CATALOG));
+
+  // Flat map of course string -> validation cluster key, rebuilt whenever COURSE_CATALOG changes.
+  // Built from all three programs; later programs (ms3, then phd) take precedence if the
+  // same course string happens to appear in more than one program with different groups.
+  let COURSE_CLUSTER = {};
+  function rebuildCourseClusterMap() {
+    const map = {};
+    ['ms1','ms3','phd'].forEach(prog => {
+      const progData = COURSE_CATALOG[prog] || {};
+      CLUSTER_ORDER.forEach(group => {
+        (progData[group] || []).forEach(course => { map[course] = VALIDATION_CLUSTER[group]; });
+      });
+    });
+    COURSE_CLUSTER = map;
+  }
+  rebuildCourseClusterMap();
+
+  const CLUSTER_LABEL = {
+    electromagnetics: '⚡ Electromagnetics & Photonics',
+    power:            '🔋 Power Systems',
+    control:          '🎛️ Control Systems',
+    communication:    '📡 Communication & Signal Processing',
+    ml:               '🤖 Machine Learning & Image Processing',
+  };
+
   let rowNum       = 0;
   let adminMode    = false;
   let adminOverride = false;  // when true: skip all load/split/cluster/reassign checks
@@ -1871,6 +1941,68 @@
       applyRestrictionsToUI();
       applyPopupSettings();
     });
+  }
+
+  /* ── COURSE CATALOG (admin-editable course lists per program/cluster) ── */
+  const PROGRAM_SELECT_IDS = { ms1: 'sel-ms1', ms3: 'sel-ms3', phd: 'sel-phd' };
+  const PROGRAM_LABEL      = { ms1: 'MSEE Sem 1', ms3: 'MSEE Sem 3', phd: 'PhD EE Sem 1' };
+
+  function loadCourseCatalog() {
+    db.doc(COURSES_DOC).onSnapshot(snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        if (d.catalog) {
+          // Merge onto the default so any cluster/program missing from the saved
+          // doc still falls back to the built-in defaults instead of disappearing.
+          const merged = JSON.parse(JSON.stringify(DEFAULT_COURSE_CATALOG));
+          ['ms1','ms3','phd'].forEach(prog => {
+            if (d.catalog[prog]) {
+              CLUSTER_ORDER.forEach(cluster => {
+                if (Array.isArray(d.catalog[prog][cluster])) {
+                  merged[prog][cluster] = d.catalog[prog][cluster];
+                }
+              });
+            }
+          });
+          COURSE_CATALOG = merged;
+        }
+      }
+      rebuildCourseClusterMap();
+      renderAllCourseSelects();
+    }, err => {
+      console.warn('Could not load course catalog:', err.message);
+      renderAllCourseSelects();
+    });
+  }
+
+  function renderCourseSelect(program) {
+    const selId = PROGRAM_SELECT_IDS[program];
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prevValue = sel.value;
+    sel.innerHTML = '<option value="">— Select Course —</option>';
+    const progData = COURSE_CATALOG[program] || {};
+    CLUSTER_ORDER.forEach(cluster => {
+      const courses = progData[cluster] || [];
+      if (courses.length === 0) return;
+      const og = document.createElement('optgroup');
+      og.label = CLUSTER_LABEL[cluster];
+      courses.forEach(course => {
+        const opt = document.createElement('option');
+        opt.setAttribute('data-cluster', cluster);
+        opt.textContent = course;
+        og.appendChild(opt);
+      });
+      sel.appendChild(og);
+    });
+    // Restore prior selection if that course still exists in the freshly rendered list
+    if (prevValue && Array.from(sel.options).some(o => o.value === prevValue)) {
+      sel.value = prevValue;
+    }
+  }
+
+  function renderAllCourseSelects() {
+    ['ms1','ms3','phd'].forEach(renderCourseSelect);
   }
 
   function buildRuleSentence() {
@@ -1914,10 +2046,10 @@
     updateComboPreview();
     // Sync cluster limits
     const cl = restrictions.clusterLimits || DEFAULT_CLUSTER_LIMITS;
-    ['power','control','communication','ml'].forEach(cluster => {
+    CLUSTER_ORDER.forEach(cluster => {
       ['ms1','ms3','phd'].forEach(sem => {
         const el = document.getElementById(`cl-${cluster}-${sem}`);
-        if (el) el.value = (cl[cluster] && cl[cluster][sem] !== undefined) ? cl[cluster][sem] : 2;
+        if (el) el.value = (cl[cluster] && cl[cluster][sem] !== undefined) ? cl[cluster][sem] : DEFAULT_CAP_BY_CAT[sem];
       });
     });
     // Sync popup settings
@@ -2029,11 +2161,11 @@
       showPopup:     showPopupEl    ? showPopupEl.checked        : true,
       popupContent:  popupContentEl ? popupContentEl.innerHTML.trim() : getDefaultPopupContent(),
     };
-    ['power','control','communication','ml'].forEach(cluster => {
+    CLUSTER_ORDER.forEach(cluster => {
       newR.clusterLimits[cluster] = {};
       ['ms1','ms3','phd'].forEach(sem => {
         const el = document.getElementById(`cl-${cluster}-${sem}`);
-        newR.clusterLimits[cluster][sem] = el ? (parseInt(el.value, 10) || 0) : 2;
+        newR.clusterLimits[cluster][sem] = el ? (parseInt(el.value, 10) || 0) : DEFAULT_CAP_BY_CAT[sem];
       });
     });
     const statusEl = document.getElementById('rest-save-status');
@@ -2054,6 +2186,139 @@
 
   document.getElementById('restrictions-modal').addEventListener('click', function(e) {
     if (e.target === this) closeRestrictionsModal();
+  });
+
+  /* ── COURSE MANAGER ── */
+  const cmState = { program: 'ms1', cluster: 'power', editingIndex: null };
+
+  function openCourseManagerModal() {
+    if (!adminMode) return;
+    cmState.editingIndex = null;
+    switchCMProgram('ms1');
+    document.getElementById('cm-save-status').textContent = '';
+    document.getElementById('course-manager-modal').classList.add('open');
+  }
+  function closeCourseManagerModal() { document.getElementById('course-manager-modal').classList.remove('open'); }
+
+  function switchCMProgram(program) {
+    cmState.program = program;
+    cmState.editingIndex = null;
+    document.querySelectorAll('#cm-program-tabs .cm-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.program === program);
+    });
+    renderCMList();
+  }
+
+  function switchCMCluster(cluster) {
+    cmState.cluster = cluster;
+    cmState.editingIndex = null;
+    document.getElementById('cm-cluster-select').value = cluster;
+    renderCMList();
+  }
+
+  function splitCourseString(course) {
+    const idx = course.indexOf(' — ');
+    if (idx === -1) return { code: '', title: course };
+    return { code: course.slice(0, idx), title: course.slice(idx + 3) };
+  }
+  function joinCourseString(code, title) {
+    code = (code || '').trim();
+    title = (title || '').trim();
+    return code ? `${code} — ${title}` : title;
+  }
+
+  function renderCMList() {
+    document.getElementById('cm-cluster-select').value = cmState.cluster;
+    const list = document.getElementById('cm-list');
+    const countEl = document.getElementById('cm-count');
+    const courses = (COURSE_CATALOG[cmState.program] && COURSE_CATALOG[cmState.program][cmState.cluster]) || [];
+    countEl.textContent = `${PROGRAM_LABEL[cmState.program]} · ${CLUSTER_LABEL[cmState.cluster]} — ${courses.length} course${courses.length !== 1 ? 's' : ''}`;
+    list.innerHTML = '';
+    if (courses.length === 0) {
+      list.innerHTML = '<div class="cm-list-empty">No courses in this cluster yet. Add one above.</div>';
+      return;
+    }
+    courses.forEach((course, idx) => {
+      const row = document.createElement('div');
+      row.className = 'cm-row';
+      if (cmState.editingIndex === idx) {
+        const parts = splitCourseString(course);
+        row.innerHTML = `
+          <input type="text" class="cm-edit-code"  value="${parts.code.replace(/"/g,'&quot;')}" placeholder="Code"/>
+          <input type="text" class="cm-edit-title" value="${parts.title.replace(/"/g,'&quot;')}" placeholder="Title"/>
+          <button class="cm-row-btn save" data-action="save">Save</button>
+          <button class="cm-row-btn" data-action="cancel">Cancel</button>
+        `;
+        row.querySelector('[data-action="save"]').addEventListener('click', () => saveCMEdit(idx, row));
+        row.querySelector('[data-action="cancel"]').addEventListener('click', () => { cmState.editingIndex = null; renderCMList(); });
+      } else {
+        row.innerHTML = `
+          <span class="cm-row-text"></span>
+          <button class="cm-row-btn" data-action="edit">Edit</button>
+          <button class="cm-row-btn danger" data-action="delete">Remove</button>
+        `;
+        row.querySelector('.cm-row-text').textContent = course;
+        row.querySelector('[data-action="edit"]').addEventListener('click', () => { cmState.editingIndex = idx; renderCMList(); });
+        row.querySelector('[data-action="delete"]').addEventListener('click', () => deleteCMCourse(idx));
+      }
+      list.appendChild(row);
+    });
+  }
+
+  function saveCMEdit(idx, row) {
+    const code  = row.querySelector('.cm-edit-code').value;
+    const title = row.querySelector('.cm-edit-title').value;
+    if (!title.trim()) { alert('Course title cannot be empty.'); return; }
+    const newStr = joinCourseString(code, title);
+    COURSE_CATALOG[cmState.program][cmState.cluster][idx] = newStr;
+    cmState.editingIndex = null;
+    renderCMList();
+  }
+
+  function addCMCourse() {
+    const codeEl  = document.getElementById('cm-new-code');
+    const titleEl = document.getElementById('cm-new-title');
+    const code  = codeEl.value;
+    const title = titleEl.value;
+    if (!title.trim()) { alert('Please enter a course title.'); return; }
+    const newStr = joinCourseString(code, title);
+    if (!COURSE_CATALOG[cmState.program]) COURSE_CATALOG[cmState.program] = {};
+    if (!COURSE_CATALOG[cmState.program][cmState.cluster]) COURSE_CATALOG[cmState.program][cmState.cluster] = [];
+    if (COURSE_CATALOG[cmState.program][cmState.cluster].includes(newStr)) {
+      alert('That course is already in this cluster.');
+      return;
+    }
+    COURSE_CATALOG[cmState.program][cmState.cluster].push(newStr);
+    codeEl.value = ''; titleEl.value = '';
+    renderCMList();
+  }
+
+  function deleteCMCourse(idx) {
+    const course = COURSE_CATALOG[cmState.program][cmState.cluster][idx];
+    if (!confirm(`Remove "${course}" from ${PROGRAM_LABEL[cmState.program]}?`)) return;
+    COURSE_CATALOG[cmState.program][cmState.cluster].splice(idx, 1);
+    renderCMList();
+  }
+
+  async function saveCourseCatalog() {
+    if (!adminMode) return;
+    const statusEl = document.getElementById('cm-save-status');
+    statusEl.textContent = 'Saving…'; statusEl.className = 'rest-save-status';
+    try {
+      await db.doc(COURSES_DOC).set({ catalog: COURSE_CATALOG }, { merge: true });
+      rebuildCourseClusterMap();
+      renderAllCourseSelects();
+      statusEl.textContent = 'Saved to database successfully.';
+      statusEl.className = 'rest-save-status ok';
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'rest-save-status'; }, 3000);
+    } catch (e) {
+      statusEl.textContent = 'Save failed — ' + e.message;
+      statusEl.className = 'rest-save-status err';
+    }
+  }
+
+  document.getElementById('course-manager-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeCourseManagerModal();
   });
 
   /* ── ADMIN ── */
@@ -2307,16 +2572,15 @@
   function updateClusterStatusBanner() {
     const banner = document.getElementById('ee-cluster-status');
     if (!banner) return;
-    const clusters = ['power', 'communication', 'ml'];
     const cats = ['ms1', 'ms3', 'phd'];
     const catLabel = { ms1: 'MSEE Sem 1', ms3: 'MSEE Sem 3', phd: 'PhD EE' };
     let rows = [];
-    for (const cluster of clusters) {
+    for (const cluster of CLUSTER_ORDER) {
       let parts = [];
       for (const cat of cats) {
         const count = getClusterSemCount(cluster, cat);
         const cl = restrictions.clusterLimits || DEFAULT_CLUSTER_LIMITS;
-        const cap = (cl[cluster] && cl[cluster][cat] !== undefined) ? cl[cluster][cat] : 2;
+        const cap = (cl[cluster] && cl[cluster][cat] !== undefined) ? cl[cluster][cat] : DEFAULT_CAP_BY_CAT[cat];
         if (count > 0) parts.push(`${catLabel[cat]}: ${count}/${cap}`);
       }
       if (parts.length > 0) rows.push(`${CLUSTER_LABEL[cluster]}: ${parts.join(', ')}`);
@@ -2420,7 +2684,7 @@
         const cluster = COURSE_CLUSTER[course];
         if (!cluster) continue;
         const cl = restrictions.clusterLimits || DEFAULT_CLUSTER_LIMITS;
-        const clusterCap = (cl[cluster] && cl[cluster][cat] !== undefined) ? cl[cluster][cat] : 2;
+        const clusterCap = (cl[cluster] && cl[cluster][cat] !== undefined) ? cl[cluster][cat] : DEFAULT_CAP_BY_CAT[cat];
         const semCount = getClusterSemCount(cluster, cat);
         if (semCount >= clusterCap) {
           const semLabel = cat === 'ms1' ? 'MSEE Sem 1' : cat === 'ms3' ? 'MSEE Sem 3' : 'PhD EE Sem 1';
@@ -2598,7 +2862,7 @@
     if (el) el.innerHTML = DEFAULT_POPUP_CONTENT;
   }
 
-  window.addEventListener('load', () => { loadRestrictions(); loadFromStorage(); });
+  window.addEventListener('load', () => { renderAllCourseSelects(); loadRestrictions(); loadCourseCatalog(); loadFromStorage(); });
 </script>
 </body>
 </html>
