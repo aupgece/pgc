@@ -41,8 +41,6 @@
       --ms1:    #1a5f5f;
       --ms3:    #a05418;
       --phd:    #4e2060;
-      --ce1:    #0d1b3e;
-      --cephd:  #1a4230;
     }
 
     body {
@@ -422,51 +420,6 @@
     }
     select option { background: #fff; font-family: 'EB Garamond', serif; }
 
-    /* ── PROGRAM SWITCHER ── */
-    .prog-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9.5px;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: var(--text-lt);
-      margin-bottom: 10px;
-    }
-    .prog-label em { color: var(--gold); font-style: normal; margin-right: 6px; }
-
-    .prog-switcher {
-      display: flex;
-      gap: 0;
-      margin-bottom: 22px;
-      border: 1px solid var(--border);
-      width: fit-content;
-    }
-    .prog-btn {
-      background: var(--parchment);
-      border: none;
-      color: var(--text-lt);
-      font-family: 'Playfair Display', serif;
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: .03em;
-      padding: 11px 28px;
-      cursor: pointer;
-      transition: background .2s, color .2s;
-    }
-    .prog-btn:not(:last-child) { border-right: 1px solid var(--border); }
-    .prog-btn.active { background: var(--navy); color: var(--ivory); }
-    .prog-btn:not(.active):hover { background: var(--cream); color: var(--navy); }
-
-    .prog-icon {
-      width: 18px;
-      height: 18px;
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 8px;
-      margin-bottom: 2px;
-      flex-shrink: 0;
-      color: inherit;
-    }
-
     .prog-section { display: none; }
     .prog-section.active { display: block; }
 
@@ -490,8 +443,6 @@
     .col-card.ms1  { border-top-color: var(--ms1); }
     .col-card.ms3  { border-top-color: var(--ms3); }
     .col-card.phd  { border-top-color: var(--phd); }
-    .col-card.ce1  { border-top-color: var(--ce1); }
-    .col-card.cephd{ border-top-color: var(--cephd); }
 
     .col-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
 
@@ -507,8 +458,6 @@
     .ctag.ms1  { background: rgba(26,95,95,.1);   color: var(--ms1);  border-color: rgba(26,95,95,.4); }
     .ctag.ms3  { background: rgba(160,84,24,.1);  color: var(--ms3);  border-color: rgba(160,84,24,.4); }
     .ctag.phd  { background: rgba(78,32,96,.1);   color: var(--phd);  border-color: rgba(78,32,96,.4); }
-    .ctag.ce1  { background: rgba(13,27,62,.1);   color: var(--ce1);  border-color: rgba(13,27,62,.4); }
-    .ctag.cephd{ background: rgba(26,66,48,.1);   color: var(--cephd);border-color: rgba(26,66,48,.4); }
 
     .ctitle {
       font-family: 'Playfair Display', serif;
@@ -613,8 +562,6 @@
     .tcat.ms1   { color: var(--ms1); }
     .tcat.ms3   { color: var(--ms3); }
     .tcat.phd   { color: var(--phd); }
-    .tcat.ce1   { color: var(--ce1); }
-    .tcat.cephd { color: var(--cephd); }
 
     .live-dot {
       display: inline-block;
@@ -1302,7 +1249,6 @@
     <div class="rules-title">Assignment Rules &amp; Constraints</div>
     <div class="rule-chip"><span class="rdot" style="background:var(--gold)"></span><span id="rule-combo-sentence">Each faculty member may be assigned a maximum of 2 MS and 2 PhD courses.</span></div>
     <div class="rule-chip"><span class="rdot" style="background:var(--crimson)"></span>Assigned course — <strong id="rule-reassign-label">cannot be re-assigned</strong></div>
-    <div class="rule-chip"><span class="rdot" style="background:var(--ce1)"></span><strong>EE &amp; CE</strong> — separate course lists, identical policies</div>
   </div>
 
   <!-- Alert -->
@@ -1345,55 +1291,6 @@
     <span class="step-num">Step II</span>
     <span class="step-title">Select Programme &amp; Courses — max 2 courses (any combination)</span>
     <span class="step-rule"></span>
-  </div>
-
-  <!-- Program Switcher -->
-  <div class="prog-label"><em>Programme</em> Choose Department</div>
-  <div class="prog-switcher">
-    <button class="prog-btn active" id="prog-btn-ee" onclick="switchProgram('ee')">
-      <!-- Lightning bolt / EE icon -->
-      <svg class="prog-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- Capacitor left plate -->
-        <line x1="4" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- Capacitor right plate -->
-        <line x1="7" y1="4" x2="7" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- Wire left -->
-        <line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- Wire right going to coil -->
-        <line x1="7" y1="10" x2="9" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- Inductor coil (3 arcs) -->
-        <path d="M9 10 Q10 7 11 10 Q12 7 13 10 Q14 7 15 10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <!-- Wire after coil -->
-        <line x1="15" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- Lightning bolt on top right -->
-        <path d="M17 3 L14.5 7.5 H16.5 L14 12 L18 6.5 H16 Z" fill="currentColor" opacity="0.85"/>
-      </svg>
-      Electrical Engineering
-    </button>
-    <button class="prog-btn" id="prog-btn-ce" onclick="switchProgram('ce')">
-      <!-- Chip / CE icon -->
-      <svg class="prog-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- Chip body -->
-        <rect x="5" y="5" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
-        <!-- Inner die -->
-        <rect x="7.5" y="7.5" width="5" height="5" rx="0.5" stroke="currentColor" stroke-width="1"/>
-        <!-- Pins top -->
-        <line x1="7.5" y1="5" x2="7.5" y2="2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="10"  y1="5" x2="10"  y2="2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="12.5" y1="5" x2="12.5" y2="2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <!-- Pins bottom -->
-        <line x1="7.5" y1="15" x2="7.5" y2="17.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="10"  y1="15" x2="10"  y2="17.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="12.5" y1="15" x2="12.5" y2="17.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <!-- Pins left -->
-        <line x1="5" y1="7.5" x2="2.5" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="5" y1="12.5" x2="2.5" y2="12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <!-- Pins right -->
-        <line x1="15" y1="7.5" x2="17.5" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="15" y1="12.5" x2="17.5" y2="12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-      </svg>
-      Computer Engineering
-    </button>
   </div>
 
   <!-- EE Section -->
@@ -1746,121 +1643,6 @@
     </div>
   </div>
 
-  <!-- CE Section -->
-  <div class="prog-section" id="prog-ce">
-    <div class="course-columns">
-      <div class="col-card ce1">
-        <div class="col-head"><span class="ctag ce1">MSCE</span><span class="ctitle">Semester 1</span></div>
-
-        <!-- Compulsory -->
-        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--crimson);margin-bottom:6px;">Compulsory</div>
-        <div style="margin-bottom:14px;">
-          <div class="sw">
-            <select id="sel-ce1-comp" onchange="onCE1CompulsoryChange()">
-              <option value="">— Select Compulsory Course —</option>
-              <option value="MSCE1 — Advanced Digital System Design">CE-612 — Advanced Digital System Design</option>
-              <option value="MSCE1 — Embedded Systems">CE-613 — Embedded Systems</option>
-            </select>
-          </div>
-          <div class="inline-notice" id="notice-ce1-comp"></div>
-        </div>
-
-        <!-- Divider -->
-        <div style="border-top:1px solid var(--border);margin-bottom:12px;"></div>
-
-        <!-- Elective -->
-        <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ce1);margin-bottom:6px;">Elective</div>
-        <div class="sw">
-          <select id="sel-ce1" onchange="onCEMSChange('ce1')">
-            <option value="">— Select Course —</option>
-            <option>CE-636 — Advanced Digital Signal Processing</option>
-            <option>CE-712 — Parallel Processing &amp; Distributed Systems</option>
-            <option>CE-619 — Adaptive Control</option>
-            <option>CE-631 — Stochastic Processes</option>
-            <option>CE-722 — Software Development Methodologies</option>
-            <option>CE-742 — Machine Learning</option>
-            <option>CE-713 — DSP Hardware System Design</option>
-            <option>CE-632 — Microelectronics</option>
-            <option>CE-614 — Adaptive Control</option>
-            <option>CE-734 — Adaptive Signal Processing</option>
-            <option>CE-735 — Adaptive Techniques for Wireless Communication</option>
-            <option>CE-724 — Image Processing For Intelligent Systems</option>
-            <option>CE-714 — Machine Vision</option>
-            <option>CE-743 — Artificial Neural Network</option>
-            <option>CE-637 — Computer Network</option>
-            <option>CE-725 — Pattern Recognition &amp; Analysis</option>
-            <option>CE-616 — Computer Vision</option>
-            <option>CE-753 — Detection and Estimation Theory</option>
-            <option>CE-645 — Digital Image Processing</option>
-            <option>CE-747 — Network Switching &amp; Routing</option>
-            <option>CE-638 — Design of Computer Communication Networks</option>
-            <option>CE-746 — Natural Language Processing</option>
-            <option>CE-737 — Cloud Computing</option>
-            <option>CE-647 — Data Mining</option>
-            <option>CE-648 — Deep Learning</option>
-            <option>CE-718 — IOT and Smart Systems</option>
-            <option>CE-699 — Human Computer Interface</option>
-            <option>CE-738 — Wireless Sensor Network</option>
-          </select>
-        </div>
-        <div class="inline-notice" id="notice-ce1"></div>
-      </div>
-
-      <div class="col-card cephd">
-        <div class="col-head"><span class="ctag cephd">PhD CE</span><span class="ctitle">Semester 1</span></div>
-        <div class="sw">
-          <select id="sel-cephd" onchange="onCEPhdChange()">
-            <option value="">— Select Course —</option>
-            <option>CE-821 — Advanced Operating System</option>
-            <option>CE-830 — Advanced Digital Communication</option>
-            <option>CE-820 — Advanced Software Engineering</option>
-            <option>CE-831 — Selected Topics In Computer Networks</option>
-            <option>CE-823 — Advanced Object Oriented Analysis and Design</option>
-            <option>CE-815 — Advanced Embedded Systems</option>
-            <option>CE-826 — Advanced Pattern Recognition</option>
-            <option>CE-816 — Advanced Topics in Computer Vision</option>
-            <option>CE-819 — Selected Topics in IOTs</option>
-            <option>CE-836 — Advanced Wireless Communication</option>
-            <option>CE-851 — Advanced Engineering Mathematics</option>
-            <option>CE-852 — Advanced Numerical Analysis</option>
-            <option>CE-855 — Special Topics in Robotics</option>
-            <option>CE-636 — Advanced Digital Signal Processing</option>
-            <option>CE-712 — Parallel Processing &amp; Distributed Systems</option>
-            <option>CE-619 — Adaptive Control</option>
-            <option>CE-631 — Stochastic Processes</option>
-            <option>CE-722 — Software Development Methodologies</option>
-            <option>CE-832 — Advanced Computer Networks</option>
-            <option>CE-833 — Advanced Topics In Wireless Networks</option>
-            <option>CE-742 — Machine Learning</option>
-            <option>CE-713 — DSP Hardware System Design</option>
-            <option>CE-632 — Microelectronics</option>
-            <option>CE-614 — Adaptive Control</option>
-            <option>CE-734 — Adaptive Signal Processing</option>
-            <option>CE-735 — Adaptive Techniques for Wireless Communication</option>
-            <option>CE-724 — Image Processing For Intelligent Systems</option>
-            <option>CE-714 — Machine Vision</option>
-            <option>CE-743 — Artificial Neural Network</option>
-            <option>CE-637 — Computer Network</option>
-            <option>CE-725 — Pattern Recognition &amp; Analysis</option>
-            <option>CE-616 — Computer Vision</option>
-            <option>CE-753 — Detection and Estimation Theory</option>
-            <option>CE-645 — Digital Image Processing</option>
-            <option>CE-747 — Network Switching &amp; Routing</option>
-            <option>CE-638 — Design of Computer Communication Networks</option>
-            <option>CE-746 — Natural Language Processing</option>
-            <option>CE-737 — Cloud Computing</option>
-            <option>CE-647 — Data Mining</option>
-            <option>CE-648 — Deep Learning</option>
-            <option>CE-718 — IOT and Smart Systems</option>
-            <option>CE-699 — Human Computer Interface</option>
-            <option>CE-738 — Wireless Sensor Network</option>
-          </select>
-        </div>
-        <div class="inline-notice" id="notice-cephd"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- Assignments Table -->
   <div class="section-title">
     Assigned Courses <span class="badge" id="count">0</span>
@@ -1920,12 +1702,10 @@
   const ADMIN_PASSWORD = 'pg2026';
   const LABEL = {
     ms1:'MSEE Sem 1', ms3:'MSEE Sem 3', phd:'PhD EE Sem 1',
-    ce1:'MSCE Sem 1',  ce3:'MSCE Sem 3',  cephd:'PhD CE Sem 1',
     'ms3-rm':'MSEE Sem 3 — Research Methodology (Compulsory)',
     'ms1-ls':'MSEE Sem 1 — Linear Systems (Compulsory)',
     'ms1-sp':'MSEE Sem 1 — Stochastic Processes (Compulsory)',
-    'ms1-comp':'MSEE Sem 1 — Compulsory',
-    'ce1-comp':'MSCE Sem 1 — Compulsory'
+    'ms1-comp':'MSEE Sem 1 — Compulsory'
   };
 
   let assignments  = [];
@@ -2367,7 +2147,7 @@
         courseOwners[item.course] = item.faculty;
         if (!facultySlots[item.faculty]) facultySlots[item.faculty] = { ms: null, msCount: 0, phd: null, phdCount: 0, totalCount: 0 };
         facultySlots[item.faculty].totalCount = (facultySlots[item.faculty].totalCount || 0) + 1;
-        if (item.cat === 'phd' || item.cat === 'cephd') {
+        if (item.cat === 'phd') {
           facultySlots[item.faculty].phd = item.course;
           facultySlots[item.faculty].phdCount = (facultySlots[item.faculty].phdCount || 0) + 1;
         } else {
@@ -2474,17 +2254,6 @@
     hideAlert();
   }
 
-  function onCEMSChange(changed) {
-    clearInlineNotice('ce1'); clearInlineNotice('ce3');
-    hideAlert();
-  }
-
-  function onCE1CompulsoryChange() {
-    clearInlineNotice('ce1-comp');
-    hideAlert();
-  }
-
-  function onCEPhdChange() { clearInlineNotice('cephd'); hideAlert(); }
   function onPhdChange()   { clearInlineNotice('phd'); hideAlert(); }
 
   function onFacultyChange() {
@@ -2492,8 +2261,8 @@
     refreshCourseSelectState();
   }
 
-  const MS_SELECTS  = ['sel-ms1','sel-ms3','sel-ce1'];
-  const PHD_SELECTS = ['sel-phd','sel-cephd'];
+  const MS_SELECTS  = ['sel-ms1','sel-ms3'];
+  const PHD_SELECTS = ['sel-phd'];
 
   function refreshCourseSelectState() {
     if (adminOverride) return;
@@ -2523,17 +2292,7 @@
   }
 
   /* ── PROGRAM SWITCHER ── */
-  let activeProgram = 'ee';
-  function switchProgram(prog) {
-    activeProgram = prog;
-    document.getElementById('prog-btn-ee').classList.toggle('active', prog === 'ee');
-    document.getElementById('prog-btn-ce').classList.toggle('active', prog === 'ce');
-    document.getElementById('prog-ee').classList.toggle('active', prog === 'ee');
-    document.getElementById('prog-ce').classList.toggle('active', prog === 'ce');
-    ['sel-ms1','sel-ms3','sel-phd','sel-ce1','sel-cephd'].forEach(id => { document.getElementById(id).value = ''; });
-    ['ms1','ms3','phd','ce1','cephd'].forEach(clearInlineNotice);
-    hideAlert();
-  }
+  const activeProgram = 'ee';
 
   /* ── SUBMIT ── */
   // Count how many courses from a cluster have been assigned in a given semester/cat
@@ -2574,27 +2333,18 @@
     // Build list of all selected courses this submission
     const toAssign = [];
 
-    if (activeProgram === 'ee') {
-      const ms1val    = document.getElementById('sel-ms1').value;
-      const ms3val    = document.getElementById('sel-ms3').value;
-      const phdval    = document.getElementById('sel-phd').value;
-      const rmval     = document.getElementById('sel-ms3-rm').value;
-      const compval   = document.getElementById('sel-ms1-comp').value;
-      if (ms1val) toAssign.push({ course: ms1val, cat: 'ms1' });
-      if (ms3val) toAssign.push({ course: ms3val, cat: 'ms3' });
-      if (phdval) toAssign.push({ course: phdval, cat: 'phd' });
-      if (rmval)  toAssign.push({ course: 'MSEE3 — Research Methodology', cat: 'ms3-rm', isRM: true });
-      if (compval) {
-        const compCat = compval === 'MSEE1 — Linear Systems' ? 'ms1-ls' : 'ms1-sp';
-        toAssign.push({ course: compval, cat: compCat, isCompulsory: true });
-      }
-    } else {
-      const ce1val     = document.getElementById('sel-ce1').value;
-      const ce1compval = document.getElementById('sel-ce1-comp').value;
-      const cephdval   = document.getElementById('sel-cephd').value;
-      if (ce1val)     toAssign.push({ course: ce1val,   cat: 'ce1' });
-      if (ce1compval) toAssign.push({ course: ce1compval, cat: 'ce1-comp', isCompulsory: true });
-      if (cephdval)   toAssign.push({ course: cephdval, cat: 'cephd' });
+    const ms1val    = document.getElementById('sel-ms1').value;
+    const ms3val    = document.getElementById('sel-ms3').value;
+    const phdval    = document.getElementById('sel-phd').value;
+    const rmval     = document.getElementById('sel-ms3-rm').value;
+    const compval   = document.getElementById('sel-ms1-comp').value;
+    if (ms1val) toAssign.push({ course: ms1val, cat: 'ms1' });
+    if (ms3val) toAssign.push({ course: ms3val, cat: 'ms3' });
+    if (phdval) toAssign.push({ course: phdval, cat: 'phd' });
+    if (rmval)  toAssign.push({ course: 'MSEE3 — Research Methodology', cat: 'ms3-rm', isRM: true });
+    if (compval) {
+      const compCat = compval === 'MSEE1 — Linear Systems' ? 'ms1-ls' : 'ms1-sp';
+      toAssign.push({ course: compval, cat: compCat, isCompulsory: true });
     }
 
     if (toAssign.length === 0) { showAlert('danger','⚠','Please select at least one course before submitting.'); return; }
@@ -2610,8 +2360,8 @@
       updateClusterStatusBanner();
       const names = toAssign.map(x => `"${x.course}"`).join(', ');
       showAlert('success','✔', `[Override] Assigned: ${names}.`);
-      ['sel-faculty','sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ce1','sel-ce1-comp','sel-cephd','sel-ms1-comp'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-      ['ms1','ms3','ms3-rm','phd','ce1','ce1-comp','cephd','ms1-comp'].forEach(clearInlineNotice);
+      ['sel-faculty','sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ms1-comp'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      ['ms1','ms3','ms3-rm','phd','ms1-comp'].forEach(clearInlineNotice);
       return;
     }
 
@@ -2646,8 +2396,8 @@
       if (electiveItems.length > 0) {
         const usedMS  = sl.msCount  || 0;
         const usedPhD = sl.phdCount || 0;
-        const newMS   = electiveItems.filter(x => x.cat !== 'phd' && x.cat !== 'cephd').length;
-        const newPhD  = electiveItems.filter(x => x.cat === 'phd' || x.cat === 'cephd').length;
+        const newMS   = electiveItems.filter(x => x.cat !== 'phd').length;
+        const newPhD  = electiveItems.filter(x => x.cat === 'phd').length;
         const totalMS  = usedMS  + newMS;
         const totalPhD = usedPhD + newPhD;
         const withinASplit = splits.some(s => totalMS <= (s.ms ?? maxTotal) && totalPhD <= (s.phd ?? maxTotal));
@@ -2704,8 +2454,8 @@
     const totalAfter = (slAfter.totalCount || 0) + toAssign.filter(x => !x.isRM && !x.isCompulsory).length;
     const limitMsg = totalAfter >= (restrictions.maxTotal ?? 2) ? ` Your course limit of ${restrictions.maxTotal ?? 2} has been reached.` : '';
     showAlert('success','✔', `You have been assigned: ${names}.${limitMsg}`);
-    ['sel-faculty','sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ce1','sel-ce1-comp','sel-cephd','sel-ms1-comp'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    ['ms1','ms3','ms3-rm','phd','ce1','ce1-comp','cephd','ms1-comp'].forEach(clearInlineNotice);
+    ['sel-faculty','sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ms1-comp'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['ms1','ms3','ms3-rm','phd','ms1-comp'].forEach(clearInlineNotice);
     refreshCourseSelectState();
   }
 
@@ -2717,7 +2467,7 @@
     document.getElementById('a-msg').textContent  = msg;
     b.style.display = 'flex';
     if (type === 'danger') {
-      ['sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ce1','sel-ce1-comp','sel-cephd','sel-ms1-comp'].forEach(id => {
+      ['sel-ms1','sel-ms3','sel-ms3-rm','sel-phd','sel-ms1-comp'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -2787,7 +2537,7 @@
       byFaculty[item.faculty].total++;
       if (item.isRM) byFaculty[item.faculty].rm++;
       else if (item.isCompulsory) byFaculty[item.faculty].core++;
-      else if (item.cat === 'phd' || item.cat === 'cephd') byFaculty[item.faculty].phd++;
+      else if (item.cat === 'phd') byFaculty[item.faculty].phd++;
       else byFaculty[item.faculty].ms++;
     });
     csvLines.push('');
