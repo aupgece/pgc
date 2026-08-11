@@ -1145,15 +1145,11 @@
       <div class="rest-section-title">Policy Toggles</div>
       <div class="rest-row">
         <div class="rest-label">
-          Allow course re-assignment
-          <small>If enabled, an already-assigned course may be transferred to another faculty member</small>
+          Course re-assignment
+          <small>An already-assigned course can never be transferred to another faculty member. Only Admin "Override Limits" mode can bypass this.</small>
         </div>
-        <div class="rest-control toggle-wrap">
-          <label class="toggle">
-            <input type="checkbox" id="r-allowReassign" onchange="onToggleChange()"/>
-            <span class="toggle-slider"></span>
-          </label>
-          <span class="toggle-state" id="r-allowReassign-state">OFF</span>
+        <div class="rest-control">
+          <span class="toggle-state" style="color:var(--crimson);">LOCKED</span>
         </div>
       </div>
     </div>
@@ -1377,7 +1373,7 @@
   <div class="rules-bar">
     <div class="rules-title">Assignment Rules &amp; Constraints</div>
     <div class="rule-chip"><span class="rdot" style="background:var(--gold)"></span><span id="rule-combo-sentence">Each faculty member may be assigned a maximum of 2 MS and 2 PhD courses.</span></div>
-    <div class="rule-chip"><span class="rdot" style="background:var(--crimson)"></span>Assigned course — <strong id="rule-reassign-label">cannot be re-assigned</strong></div>
+    <div class="rule-chip"><span class="rdot" style="background:var(--crimson)"></span>Assigned course — <strong id="rule-reassign-label">cannot be re-assigned to any FM</strong></div>
   </div>
 
   <!-- Alert -->
@@ -1559,7 +1555,6 @@
   let restrictions = {
     maxTotal: 2,
     splits: [ {ms:2,phd:0}, {ms:0,phd:2}, {ms:1,phd:1} ],
-    allowReassign: false,
     clusterLimits: JSON.parse(JSON.stringify(DEFAULT_CLUSTER_LIMITS)),
   };
   const ADMIN_PASSWORD = 'pg2026';
@@ -1929,7 +1924,6 @@
         const d = snap.data();
         if (d.maxTotal     !== undefined) restrictions.maxTotal     = d.maxTotal;
         if (d.splits       !== undefined) restrictions.splits       = d.splits;
-        if (d.allowReassign!== undefined) restrictions.allowReassign= d.allowReassign;
         if (d.clusterLimits!== undefined) restrictions.clusterLimits= d.clusterLimits;
         if (d.showPopup    !== undefined) restrictions.showPopup    = d.showPopup;
         if (d.popupContent !== undefined) restrictions.popupContent = d.popupContent;
@@ -2023,8 +2017,6 @@
 
   function applyRestrictionsToUI() {
     document.getElementById('rule-combo-sentence').textContent = buildRuleSentence();
-    document.getElementById('rule-reassign-label').textContent =
-      restrictions.allowReassign ? 'may be re-assigned' : 'cannot be re-assigned';
     syncModalInputs();
   }
 
@@ -2034,7 +2026,6 @@
 
   function syncModalInputs() {
     document.getElementById('r-maxTotal').value = restrictions.maxTotal ?? 2;
-    document.getElementById('r-allowReassign').checked = restrictions.allowReassign;
     const rows = getSplitRows();
     const splits = restrictions.splits ?? [ {ms:2,phd:0}, {ms:0,phd:2}, {ms:1,phd:1} ];
     rows.forEach((row, i) => {
@@ -2088,7 +2079,6 @@
   function onStepperChange() { updateComboPreview(); }
 
   function updateToggleStates() {
-    document.getElementById('r-allowReassign-state').textContent = restrictions.allowReassign ? 'ON' : 'OFF';
     const showPopupEl = document.getElementById('r-showPopup');
     if (showPopupEl) {
       document.getElementById('r-showPopup-state').textContent = showPopupEl.checked ? 'ON' : 'OFF';
@@ -2156,7 +2146,6 @@
     const newR = {
       maxTotal:      parseInt(document.getElementById('r-maxTotal').value, 10),
       splits,
-      allowReassign: document.getElementById('r-allowReassign').checked,
       clusterLimits: {},
       showPopup:     showPopupEl    ? showPopupEl.checked        : true,
       popupContent:  popupContentEl ? popupContentEl.innerHTML.trim() : getDefaultPopupContent(),
@@ -2694,9 +2683,13 @@
       }
     }
 
-    // Reassign check (elective courses only)
-    for (const item of toAssign.filter(x => !x.isRM && !x.isCompulsory)) {
-      if (!restrictions.allowReassign && courseOwners[item.course] && courseOwners[item.course] !== faculty) {
+    // Reassign check (ALL courses — elective and compulsory alike) — once a
+    // course has been assigned to a faculty member, in any semester or
+    // cluster, it can never be given to a different faculty member. Only
+    // Admin "Override Limits" mode (handled earlier via the adminOverride
+    // branch) can bypass this.
+    for (const item of toAssign) {
+      if (courseOwners[item.course] && courseOwners[item.course] !== faculty) {
         showAlert('danger','✖', `"${item.course}" is already assigned to another faculty member.`);
         return;
       }
