@@ -611,6 +611,44 @@
     }
     .del-btn:hover { color: var(--crimson); }
     body.admin-mode .del-btn { display: inline-block; }
+    .edit-btn {
+      background: none;
+      border: none;
+      color: var(--border-dk);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 3px 7px;
+      display: none;
+      transition: color .15s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .edit-btn:hover { color: var(--teal); }
+    body.admin-mode .edit-btn { display: inline-block; }
+    .row-edit-input, .row-edit-select {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 4px 6px;
+      border: 1px solid var(--border-dk);
+      background: var(--cream);
+      color: var(--text);
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .row-edit-actions { display: flex; gap: 6px; white-space: nowrap; }
+    .row-edit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border: 1px solid var(--border-dk);
+      background: var(--cream);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .row-edit-btn.save { background: var(--forest); color: #fff; border-color: var(--forest); }
+    .row-edit-btn.save:hover { background: #123425; }
+    .row-edit-btn.cancel:hover { background: var(--parchment); }
     #clear-all-btn { display: none; }
     body.admin-mode #clear-all-btn { display: inline-flex; }
 
@@ -2505,22 +2543,100 @@
     document.getElementById('count').textContent = assignments.length;
   }
 
+  function catLabel(cat) {
+    if (LABEL[cat]) return LABEL[cat];
+    // Legacy/unknown category strings (e.g. old per-course compulsory tags
+    // like "ms1-ls" / "ms1-sp" from earlier records) — fall back to the
+    // program they belong to based on their prefix.
+    if (/^ms1/.test(cat)) return LABEL.ms1;
+    if (/^ms3/.test(cat)) return LABEL.ms3;
+    if (/^phd/.test(cat)) return LABEL.phd;
+    return cat;
+  }
+
+  let editingAssignmentId = null;
+
+  function getFacultyOptionsHTML(selected) {
+    const src = document.getElementById('sel-faculty');
+    const opts = Array.from(src.options).filter(o => o.value !== '');
+    return opts.map(o => {
+      const val = o.value || o.textContent;
+      const sel = val === selected ? ' selected' : '';
+      return `<option value="${val.replace(/"/g,'&quot;')}"${sel}>${o.textContent}</option>`;
+    }).join('');
+  }
+
   function addRow(item, n) {
     document.getElementById('empty').style.display = 'none';
     document.getElementById('tbl').style.display   = 'table';
     const tr = document.createElement('tr');
     tr.setAttribute('data-id', item.id);
+
+    if (editingAssignmentId === item.id) {
+      tr.innerHTML = `
+        <td>${String(n).padStart(2,'0')}</td>
+        <td class="tf"><select class="row-edit-select" id="edit-faculty-${item.id}">${getFacultyOptionsHTML(item.faculty)}</select></td>
+        <td class="tc"><input type="text" class="row-edit-input" id="edit-course-${item.id}" value="${String(item.course).replace(/"/g,'&quot;')}"/></td>
+        <td class="tcat ${item.cat}">${catLabel(item.cat)}</td>
+        <td class="tt">${item.time}</td>
+        <td>
+          <div class="row-edit-actions">
+            <button class="row-edit-btn save" onclick="saveEditAssignment('${item.id}')">Save</button>
+            <button class="row-edit-btn cancel" onclick="cancelEditAssignment()">Cancel</button>
+          </div>
+        </td>`;
+      document.getElementById('tbody').prepend(tr);
+      document.getElementById('count').textContent = assignments.length;
+      return;
+    }
+
     const isCore = item.isRM || item.isCompulsory;
     const compulsoryBadge = isCore ? ' <span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:rgba(139,26,26,.1);color:var(--crimson);border:1px solid rgba(139,26,26,.25);padding:2px 7px;vertical-align:middle;">Compulsory</span>' : '';
     tr.innerHTML = `
       <td>${String(n).padStart(2,'0')}</td>
       <td class="tf"><span class="live-dot"></span>${item.faculty}</td>
       <td class="tc">${item.course}${compulsoryBadge}</td>
-      <td class="tcat ${item.cat}">${LABEL[item.cat] || item.cat}</td>
+      <td class="tcat ${item.cat}">${catLabel(item.cat)}</td>
       <td class="tt">${item.time}</td>
-      <td><button class="del-btn" title="Remove (Admin only)" onclick="deleteAssignment('${item.id}')">✕</button></td>`;
+      <td>
+        <button class="edit-btn" title="Edit (Admin only)" onclick="editAssignmentRow('${item.id}')">✎</button>
+        <button class="del-btn" title="Remove (Admin only)" onclick="deleteAssignment('${item.id}')">✕</button>
+      </td>`;
     document.getElementById('tbody').prepend(tr);
     document.getElementById('count').textContent = assignments.length;
+  }
+
+  function editAssignmentRow(id) {
+    if (!adminMode) return;
+    editingAssignmentId = id;
+    renderAllRows();
+  }
+
+  function cancelEditAssignment() {
+    editingAssignmentId = null;
+    renderAllRows();
+  }
+
+  async function saveEditAssignment(id) {
+    if (!adminMode) return;
+    const facultyEl = document.getElementById('edit-faculty-' + id);
+    const courseEl  = document.getElementById('edit-course-' + id);
+    const faculty = facultyEl.value.trim();
+    const course  = courseEl.value.trim();
+    if (!faculty) { alert('Please select a faculty member.'); return; }
+    if (!course)  { alert('Course cannot be empty.'); return; }
+    editingAssignmentId = null;
+    await updateAssignmentInStorage(id, { faculty, course });
+  }
+
+  async function updateAssignmentInStorage(id, fields) {
+    syncStatus('saving', 'Saving…');
+    try {
+      await db.collection(COL).doc(id).update(fields);
+      syncStatus('ok', `Updated — ${assignments.length} assignment(s) stored`);
+    } catch (e) {
+      syncStatus('error', 'Update failed — ' + e.message);
+    }
   }
 
   async function deleteAssignment(id) {
@@ -2799,7 +2915,7 @@
       String(i + 1).padStart(2, '0'),
       item.faculty,
       item.course,
-      LABEL[item.cat] || item.cat,
+      catLabel(item.cat),
       item.isRM ? 'Compulsory (RM)' : item.isCompulsory ? 'Compulsory (Core)' : 'Elective',
       item.time
     ]);
