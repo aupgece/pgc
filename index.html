@@ -1265,7 +1265,7 @@
 <div id="course-manager-modal" role="dialog" aria-modal="true">
   <div class="rest-box" style="max-width:640px;">
     <div class="rest-title">Manage Courses</div>
-    <div class="rest-sub">Add, edit, or remove courses in any cluster — for MSEE Sem 1, MSEE Sem 3, and PhD EE.</div>
+    <div class="rest-sub">Add, edit, or remove courses in any elective cluster, or in the Compulsory list — for MSEE Sem 1, MSEE Sem 3, and PhD EE.</div>
 
     <!-- Program tabs -->
     <div class="cm-tabs" id="cm-program-tabs">
@@ -1282,6 +1282,7 @@
         <option value="power">🔋 Power Systems</option>
         <option value="control">🎛️ Control Systems</option>
         <option value="ml">🤖 Machine Learning &amp; Image Processing</option>
+        <option value="compulsory">🎓 Compulsory Courses</option>
       </select>
     </div>
 
@@ -1432,8 +1433,6 @@
           <div class="sw">
             <select id="sel-ms1-comp" onchange="onMS1CompulsoryChange()">
               <option value="">— Select Compulsory Course —</option>
-              <option value="MSEE1 — Linear Systems">MSEE1 — Linear Systems</option>
-              <option value="MSEE1 — Stochastic Processes">MSEE1 — Stochastic Processes</option>
             </select>
           </div>
           <div class="inline-notice" id="notice-ms1-comp"></div>
@@ -1462,7 +1461,6 @@
           <div class="sw">
             <select id="sel-ms3-rm" onchange="onRMChange()">
               <option value="">— Select Compulsory Course —</option>
-              <option value="MSEE3 — Research Methodology">MSEE3 — Research Methodology</option>
             </select>
           </div>
           <div class="inline-notice" id="notice-ms3-rm"></div>
@@ -1560,9 +1558,7 @@
   const ADMIN_PASSWORD = 'pg2026';
   const LABEL = {
     ms1:'MSEE Sem 1', ms3:'MSEE Sem 3', phd:'PhD EE Sem 1',
-    'ms3-rm':'MSEE Sem 3 — Research Methodology (Compulsory)',
-    'ms1-ls':'MSEE Sem 1 — Linear Systems (Compulsory)',
-    'ms1-sp':'MSEE Sem 1 — Stochastic Processes (Compulsory)',
+    'ms3-rm':'MSEE Sem 3 — Compulsory',
     'ms1-comp':'MSEE Sem 1 — Compulsory'
   };
 
@@ -1680,6 +1676,10 @@
         "EE-621 — Internet Architectures and Protocols",
         "EE-784 — Cyber-Physical Systems Modelling",
       ],
+      compulsory: [
+        "MSEE1 — Linear Systems",
+        "MSEE1 — Stochastic Processes",
+      ],
     },
     ms3: {
       electromagnetics: [
@@ -1761,6 +1761,9 @@
         "EE-720 — Advanced Computer Networks",
         "EE-621 — Internet Architectures and Protocols",
         "EE-784 — Cyber-Physical Systems Modelling",
+      ],
+      compulsory: [
+        "MSEE3 — Research Methodology",
       ],
     },
     phd: {
@@ -1874,6 +1877,7 @@
         "EE-820 — Selected Topics in Internet of Things (IoT)",
         "EE-784 — Cyber-Physical Systems Modelling",
       ],
+      compulsory: [],
     },
   };
 
@@ -1909,7 +1913,12 @@
     control:          '🎛️ Control Systems',
     communication:    '📡 Communication & Signal Processing',
     ml:               '🤖 Machine Learning & Image Processing',
+    compulsory:       '🎓 Compulsory Courses',
   };
+
+  // Programs' compulsory-course dropdown element IDs (only programs that have a
+  // dedicated "Compulsory" select in Step II use this).
+  const COMPULSORY_SELECT_IDS = { ms1: 'sel-ms1-comp', ms3: 'sel-ms3-rm' };
 
   let rowNum       = 0;
   let adminMode    = false;
@@ -1956,6 +1965,9 @@
                   merged[prog][cluster] = d.catalog[prog][cluster];
                 }
               });
+              if (Array.isArray(d.catalog[prog].compulsory)) {
+                merged[prog].compulsory = d.catalog[prog].compulsory;
+              }
             }
           });
           COURSE_CATALOG = merged;
@@ -1995,8 +2007,28 @@
     }
   }
 
+  function renderCompulsorySelect(program) {
+    const selId = COMPULSORY_SELECT_IDS[program];
+    if (!selId) return;
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prevValue = sel.value;
+    sel.innerHTML = '<option value="">— Select Compulsory Course —</option>';
+    const courses = (COURSE_CATALOG[program] && COURSE_CATALOG[program].compulsory) || [];
+    courses.forEach(course => {
+      const opt = document.createElement('option');
+      opt.value = course;
+      opt.textContent = course;
+      sel.appendChild(opt);
+    });
+    if (prevValue && Array.from(sel.options).some(o => o.value === prevValue)) {
+      sel.value = prevValue;
+    }
+  }
+
   function renderAllCourseSelects() {
     ['ms1','ms3','phd'].forEach(renderCourseSelect);
+    Object.keys(COMPULSORY_SELECT_IDS).forEach(renderCompulsorySelect);
   }
 
   function buildRuleSentence() {
@@ -2594,11 +2626,8 @@
     if (ms1val) toAssign.push({ course: ms1val, cat: 'ms1' });
     if (ms3val) toAssign.push({ course: ms3val, cat: 'ms3' });
     if (phdval) toAssign.push({ course: phdval, cat: 'phd' });
-    if (rmval)  toAssign.push({ course: 'MSEE3 — Research Methodology', cat: 'ms3-rm', isRM: true });
-    if (compval) {
-      const compCat = compval === 'MSEE1 — Linear Systems' ? 'ms1-ls' : 'ms1-sp';
-      toAssign.push({ course: compval, cat: compCat, isCompulsory: true });
-    }
+    if (rmval)  toAssign.push({ course: rmval, cat: 'ms3-rm', isRM: true });
+    if (compval) toAssign.push({ course: compval, cat: 'ms1-comp', isCompulsory: true });
 
     if (toAssign.length === 0) { showAlert('danger','⚠','Please select at least one course before submitting.'); return; }
 
