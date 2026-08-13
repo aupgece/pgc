@@ -1550,6 +1550,19 @@
     <tbody id="tbody"></tbody>
   </table>
 
+  <!-- Students Course Selection link -->
+  <div style="display:flex; justify-content:center; margin:28px 0 4px;">
+    <a href="student-course-selection.html" target="_blank" rel="noopener"
+       style="display:inline-block; background:var(--navy); color:var(--gold-lt); text-decoration:none;
+              font-family:'Playfair Display', serif; font-weight:700; font-size:14px; letter-spacing:.04em;
+              padding:13px 30px; border:1px solid var(--gold); box-shadow:0 2px 10px rgba(13,27,62,.25);
+              transition:background .2s, transform .1s;"
+       onmouseover="this.style.background='var(--navy-lt)'; this.style.transform='translateY(-1px)';"
+       onmouseout="this.style.background='var(--navy)'; this.style.transform='translateY(0)';">
+      🎓 Students Course Selection
+    </a>
+  </div>
+
   <!-- Footer -->
   <div class="footer-rule">
     <span class="footer-left">Department of Electrical &amp; Computer Engineering · Air University Islamabad</span>
@@ -1715,8 +1728,8 @@
         "EE-784 — Cyber-Physical Systems Modelling",
       ],
       compulsory: [
-        "MSEE1 — Linear Systems",
-        "MSEE1 — Stochastic Processes",
+        "EE651 — Linear Systems",
+        "EE631 — Stochastic Processes",
       ],
     },
     ms3: {
@@ -1801,7 +1814,7 @@
         "EE-784 — Cyber-Physical Systems Modelling",
       ],
       compulsory: [
-        "MSEE3 — Research Methodology",
+        "EE710 — Research Methodology",
       ],
     },
     phd: {
@@ -2556,6 +2569,12 @@
 
   let editingAssignmentId = null;
 
+  // Formats a Date object as a value usable by an <input type="datetime-local">.
+  function toDatetimeLocalValue(date) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
   function getFacultyOptionsHTML(selected) {
     const src = document.getElementById('sel-faculty');
     const opts = Array.from(src.options).filter(o => o.value !== '');
@@ -2573,12 +2592,13 @@
     tr.setAttribute('data-id', item.id);
 
     if (editingAssignmentId === item.id) {
+      const currentDate = (item.timestamp && typeof item.timestamp.toDate === 'function') ? item.timestamp.toDate() : new Date();
       tr.innerHTML = `
         <td>${String(n).padStart(2,'0')}</td>
         <td class="tf"><select class="row-edit-select" id="edit-faculty-${item.id}">${getFacultyOptionsHTML(item.faculty)}</select></td>
         <td class="tc"><input type="text" class="row-edit-input" id="edit-course-${item.id}" value="${String(item.course).replace(/"/g,'&quot;')}"/></td>
         <td class="tcat ${item.cat}">${catLabel(item.cat)}</td>
-        <td class="tt">${item.time}</td>
+        <td class="tt"><input type="datetime-local" class="row-edit-input" id="edit-time-${item.id}" value="${toDatetimeLocalValue(currentDate)}"/></td>
         <td>
           <div class="row-edit-actions">
             <button class="row-edit-btn save" onclick="saveEditAssignment('${item.id}')">Save</button>
@@ -2621,12 +2641,23 @@
     if (!adminMode) return;
     const facultyEl = document.getElementById('edit-faculty-' + id);
     const courseEl  = document.getElementById('edit-course-' + id);
+    const timeEl    = document.getElementById('edit-time-' + id);
     const faculty = facultyEl.value.trim();
     const course  = courseEl.value.trim();
     if (!faculty) { alert('Please select a faculty member.'); return; }
     if (!course)  { alert('Course cannot be empty.'); return; }
+
+    const fields = { faculty, course };
+
+    if (timeEl && timeEl.value) {
+      const newDate = new Date(timeEl.value);
+      if (isNaN(newDate.getTime())) { alert('Please enter a valid submission date/time.'); return; }
+      fields.time = newDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+      fields.timestamp = firebase.firestore.Timestamp.fromDate(newDate);
+    }
+
     editingAssignmentId = null;
-    await updateAssignmentInStorage(id, { faculty, course });
+    await updateAssignmentInStorage(id, fields);
   }
 
   async function updateAssignmentInStorage(id, fields) {
