@@ -465,7 +465,6 @@
         <div class="dt-text">All Submitted Course Selections — Fall 2026</div>
         <div class="dt-rule"></div>
         <div class="admin-bar">
-          <button class="admin-link" id="admin-login-btn" onclick="openAdminLoginModal()">Admin Login</button>
           <div class="admin-badge" id="admin-badge">
             <span class="dot"></span> Admin Mode
             <button onclick="logoutAdmin()">Logout</button>
@@ -941,6 +940,15 @@
   }
 
   /* ── ADMIN LOGIN ── */
+  // Secret access: press Ctrl+Shift+A (or Cmd+Shift+A on Mac) anywhere on the page
+  // to open the admin login modal — there is no visible "Admin Login" button.
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+      e.preventDefault();
+      if (!adminMode) openAdminLoginModal();
+    }
+  });
+
   function openAdminLoginModal() {
     document.getElementById('admin-login-modal').classList.add('open');
     document.getElementById('admin-pw-input').value = '';
@@ -953,7 +961,6 @@
     const pw = document.getElementById('admin-pw-input').value;
     if (pw === ADMIN_PASSWORD) {
       adminMode = true;
-      document.getElementById('admin-login-btn').style.display = 'none';
       document.getElementById('admin-badge').classList.add('show');
       closeAdminLoginModal();
       renderSelectionsTable();
@@ -968,7 +975,6 @@
 
   function logoutAdmin() {
     adminMode = false;
-    document.getElementById('admin-login-btn').style.display = '';
     document.getElementById('admin-badge').classList.remove('show');
     renderSelectionsTable();
   }
