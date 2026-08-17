@@ -886,6 +886,31 @@
     .cm-row-btn.save { border-color: var(--forest); color: var(--forest); }
     .cm-count { font-size: 11px; color: var(--text-lt); font-style: italic; margin-bottom: 12px; }
 
+    /* ── Cluster management (Course Manager) ── */
+    .cm-clusters-section { margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .cm-clusters-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--text-lt); margin-bottom: 9px;
+    }
+    .cm-cluster-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .cm-cluster-chip {
+      display: flex; align-items: center; gap: 7px; background: var(--cream);
+      border: 1px solid var(--border); padding: 5px 6px 5px 11px; font-size: 12.5px; color: var(--text-md);
+    }
+    .cm-cluster-chip .cm-chip-del {
+      background: none; border: none; color: var(--border-dk); cursor: pointer;
+      font-size: 12px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; transition: color .15s;
+    }
+    .cm-cluster-chip .cm-chip-del:hover { color: var(--crimson); }
+    .cm-add-cluster-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cm-add-cluster-row input.cm-cluster-icon  { width: 84px; }
+    .cm-add-cluster-row input.cm-cluster-label { flex: 1; min-width: 180px; }
+    .cm-add-cluster-row input {
+      font-family: 'EB Garamond', serif; font-size: 13.5px; padding: 9px 10px;
+      border: 1px solid var(--border); background: #fff; color: var(--text); outline: none;
+    }
+    .cm-add-cluster-row input:focus { border-color: var(--navy); }
+
     /* ── FOOTER RULE ── */
     .footer-rule {
       margin-top: 60px;
@@ -1106,76 +1131,7 @@
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lt);text-align:center;">MSEE Sem 3</div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lt);text-align:center;">PhD EE</div>
       </div>
-      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--gold-dk);text-transform:uppercase;margin-bottom:6px;">⚡ Electromagnetics & Photonics</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('electromagnetics','ms1',-1)">−</button><input type="number" id="cl-electromagnetics-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('electromagnetics','ms1',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('electromagnetics','ms3',-1)">−</button><input type="number" id="cl-electromagnetics-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('electromagnetics','ms3',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('electromagnetics','phd',-1)">−</button><input type="number" id="cl-electromagnetics-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('electromagnetics','phd',+1)">+</button></div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--teal);text-transform:uppercase;margin-bottom:6px;">📡 Communication & Signal Processing</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('communication','ms1',-1)">−</button><input type="number" id="cl-communication-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms1',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('communication','ms3',-1)">−</button><input type="number" id="cl-communication-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','ms3',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('communication','phd',-1)">−</button><input type="number" id="cl-communication-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('communication','phd',+1)">+</button></div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin-bottom:6px;">🔋 Power Systems</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('power','ms1',-1)">−</button><input type="number" id="cl-power-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','ms1',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('power','ms3',-1)">−</button><input type="number" id="cl-power-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','ms3',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('power','phd',-1)">−</button><input type="number" id="cl-power-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('power','phd',+1)">+</button></div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--forest);text-transform:uppercase;margin-bottom:6px;">🎛️ Control Systems</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('control','ms1',-1)">−</button><input type="number" id="cl-control-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','ms1',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('control','ms3',-1)">−</button><input type="number" id="cl-control-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','ms3',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('control','phd',-1)">−</button><input type="number" id="cl-control-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('control','phd',+1)">+</button></div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--plum);text-transform:uppercase;margin-bottom:6px;">🤖 Machine Learning & Image Processing</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('ml','ms1',-1)">−</button><input type="number" id="cl-ml-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','ms1',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('ml','ms3',-1)">−</button><input type="number" id="cl-ml-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','ms3',+1)">+</button></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <div class="stepper"><button onclick="stepCluster('ml','phd',-1)">−</button><input type="number" id="cl-ml-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('ml','phd',+1)">+</button></div>
-          </div>
-        </div>
-      </div>
+      <div id="cluster-limit-rows"><!-- populated dynamically by renderClusterLimitRows() --></div>
     </div>
     </div>
 
@@ -1312,15 +1268,21 @@
       <div class="cm-tab" data-program="phd" onclick="switchCMProgram('phd')">PhD EE Sem 1</div>
     </div>
 
+    <!-- Cluster management -->
+    <div class="cm-clusters-section">
+      <div class="cm-clusters-label">Clusters — cap independently per semester (add / remove below)</div>
+      <div class="cm-cluster-chips" id="cm-cluster-chips"><!-- populated dynamically --></div>
+      <div class="cm-add-cluster-row">
+        <input type="text" class="cm-cluster-icon"  id="cm-new-cluster-icon"  placeholder="Icon (optional)" maxlength="4"/>
+        <input type="text" class="cm-cluster-label" id="cm-new-cluster-label" placeholder="New cluster name, e.g. RF & Microwave" maxlength="60"/>
+        <button class="cm-add-btn" onclick="addCMCluster()">+ Add Cluster</button>
+      </div>
+    </div>
+
     <!-- Cluster selector -->
     <div class="cm-cluster-select-wrap">
       <select id="cm-cluster-select" onchange="switchCMCluster(this.value)">
-        <option value="electromagnetics">⚡ Electromagnetics &amp; Photonics</option>
-        <option value="communication">📡 Communication &amp; Signal Processing</option>
-        <option value="power">🔋 Power Systems</option>
-        <option value="control">🎛️ Control Systems</option>
-        <option value="ml">🤖 Machine Learning &amp; Image Processing</option>
-        <option value="compulsory">🎓 Compulsory Courses</option>
+        <!-- populated dynamically by renderCMClusterSelect() -->
       </select>
     </div>
 
@@ -1932,17 +1894,60 @@
     },
   };
 
-  // Display order of course groups in the dropdowns / course manager (5 groups).
-  const CLUSTER_ORDER = ['electromagnetics','communication','power','control','ml'];
+  // ── CLUSTERS (admin-editable registry, synced to Firestore doc settings/clusters) ──
+  // Each cluster caps independently for capping purposes. Admins can add or remove
+  // clusters at runtime via the Course Manager; the 5 below are just the starting set.
+  const DEFAULT_CLUSTERS = [
+    { key: 'electromagnetics', icon: '⚡',  label: 'Electromagnetics & Photonics' },
+    { key: 'communication',    icon: '📡',  label: 'Communication & Signal Processing' },
+    { key: 'power',            icon: '🔋',  label: 'Power Systems' },
+    { key: 'control',          icon: '🎛️', label: 'Control Systems' },
+    { key: 'ml',               icon: '🤖',  label: 'Machine Learning & Image Processing' },
+  ];
+  const CLUSTERS_DOC = 'settings/clusters';
+  let CLUSTERS = JSON.parse(JSON.stringify(DEFAULT_CLUSTERS));
 
-  // Each of the 5 course groups is its own independent cluster for capping purposes —
-  // Electromagnetics & Photonics and Power Systems are separate clusters with separate caps.
-  const VALIDATION_CLUSTER = { electromagnetics: 'electromagnetics', power: 'power', communication: 'communication', control: 'control', ml: 'ml' };
+  // Display order of course groups in the dropdowns / course manager, and their
+  // display labels — both derived from CLUSTERS and rebuilt whenever it changes.
+  let CLUSTER_ORDER = [];
+  let CLUSTER_LABEL = {};
+  function rebuildClusterMeta() {
+    CLUSTER_ORDER = CLUSTERS.map(c => c.key);
+    const labels = {};
+    CLUSTERS.forEach(c => { labels[c.key] = `${c.icon ? c.icon + ' ' : ''}${c.label}`.trim(); });
+    labels.compulsory = '🎓 Compulsory Courses';
+    CLUSTER_LABEL = labels;
+  }
+  rebuildClusterMeta();
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function slugifyClusterKey(label) {
+    let base = String(label).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (!base) base = 'cluster';
+    let key = base, i = 2;
+    while (CLUSTERS.some(c => c.key === key)) { key = `${base}-${i}`; i++; }
+    return key;
+  }
 
   // Live course catalog (editable by admins, synced to Firestore doc settings/courses)
   let COURSE_CATALOG = JSON.parse(JSON.stringify(DEFAULT_COURSE_CATALOG));
 
-  // Flat map of course string -> validation cluster key, rebuilt whenever COURSE_CATALOG changes.
+  // Makes sure every program has an (empty, if needed) course array for every
+  // currently-registered cluster, so newly-added clusters are immediately usable.
+  function ensureCatalogHasClusters() {
+    ['ms1','ms3','phd'].forEach(prog => {
+      if (!COURSE_CATALOG[prog]) COURSE_CATALOG[prog] = {};
+      CLUSTER_ORDER.forEach(key => {
+        if (!Array.isArray(COURSE_CATALOG[prog][key])) COURSE_CATALOG[prog][key] = [];
+      });
+      if (!Array.isArray(COURSE_CATALOG[prog].compulsory)) COURSE_CATALOG[prog].compulsory = [];
+    });
+  }
+
+  // Flat map of course string -> cluster key, rebuilt whenever COURSE_CATALOG changes.
   // Built from all three programs; later programs (ms3, then phd) take precedence if the
   // same course string happens to appear in more than one program with different groups.
   let COURSE_CLUSTER = {};
@@ -1951,21 +1956,12 @@
     ['ms1','ms3','phd'].forEach(prog => {
       const progData = COURSE_CATALOG[prog] || {};
       CLUSTER_ORDER.forEach(group => {
-        (progData[group] || []).forEach(course => { map[course] = VALIDATION_CLUSTER[group]; });
+        (progData[group] || []).forEach(course => { map[course] = group; });
       });
     });
     COURSE_CLUSTER = map;
   }
   rebuildCourseClusterMap();
-
-  const CLUSTER_LABEL = {
-    electromagnetics: '⚡ Electromagnetics & Photonics',
-    power:            '🔋 Power Systems',
-    control:          '🎛️ Control Systems',
-    communication:    '📡 Communication & Signal Processing',
-    ml:               '🤖 Machine Learning & Image Processing',
-    compulsory:       '🎓 Compulsory Courses',
-  };
 
   // Programs' compulsory-course dropdown element IDs (only programs that have a
   // dedicated "Compulsory" select in Step II use this).
@@ -1997,6 +1993,158 @@
     });
   }
 
+  /* ── CLUSTERS SYNC ── */
+  function loadClusters() {
+    db.doc(CLUSTERS_DOC).onSnapshot(snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        if (Array.isArray(d.clusters) && d.clusters.length > 0) {
+          CLUSTERS = d.clusters;
+        }
+      }
+      rebuildClusterMeta();
+      ensureCatalogHasClusters();
+      rebuildCourseClusterMap();
+      renderAllCourseSelects();
+      renderClusterLimitRows();
+      renderCMClusterSelect();
+      renderCMClusterChips();
+      if (document.getElementById('course-manager-modal').classList.contains('open')) renderCMList();
+      updateClusterStatusBanner();
+    }, err => {
+      console.warn('Could not load clusters:', err.message);
+      rebuildClusterMeta();
+      renderClusterLimitRows();
+      renderCMClusterSelect();
+      renderCMClusterChips();
+    });
+  }
+
+  async function saveClustersToDb() {
+    try {
+      await db.doc(CLUSTERS_DOC).set({ clusters: CLUSTERS }, { merge: true });
+    } catch (e) {
+      alert('Failed to save cluster changes: ' + e.message);
+    }
+  }
+
+  function renderCMClusterChips() {
+    const wrap = document.getElementById('cm-cluster-chips');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (CLUSTERS.length === 0) {
+      wrap.innerHTML = '<span style="font-size:12px;color:var(--text-lt);font-style:italic;">No clusters yet — add one below.</span>';
+      return;
+    }
+    CLUSTERS.forEach(c => {
+      const chip = document.createElement('div');
+      chip.className = 'cm-cluster-chip';
+      const label = document.createElement('span');
+      label.textContent = `${c.icon ? c.icon + ' ' : ''}${c.label}`;
+      const del = document.createElement('button');
+      del.className = 'cm-chip-del';
+      del.type = 'button';
+      del.title = `Remove ${c.label}`;
+      del.textContent = '✕';
+      del.onclick = () => deleteCMCluster(c.key);
+      chip.appendChild(label);
+      chip.appendChild(del);
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderCMClusterSelect() {
+    const sel = document.getElementById('cm-cluster-select');
+    if (!sel) return;
+    const prev = sel.value || cmState.cluster;
+    sel.innerHTML = '';
+    CLUSTERS.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.key;
+      opt.textContent = `${c.icon ? c.icon + ' ' : ''}${c.label}`;
+      sel.appendChild(opt);
+    });
+    const compOpt = document.createElement('option');
+    compOpt.value = 'compulsory';
+    compOpt.textContent = '🎓 Compulsory Courses';
+    sel.appendChild(compOpt);
+    const has = v => Array.from(sel.options).some(o => o.value === v);
+    sel.value = has(prev) ? prev : (sel.options[0] ? sel.options[0].value : 'compulsory');
+    cmState.cluster = sel.value;
+  }
+
+  async function addCMCluster() {
+    if (!adminMode) return;
+    const iconEl  = document.getElementById('cm-new-cluster-icon');
+    const labelEl = document.getElementById('cm-new-cluster-label');
+    const icon  = iconEl.value.trim();
+    const label = labelEl.value.trim();
+    if (!label) { alert('Please enter a cluster name.'); return; }
+    const key = slugifyClusterKey(label);
+    CLUSTERS.push({ key, icon, label });
+    rebuildClusterMeta();
+    ensureCatalogHasClusters();
+    rebuildCourseClusterMap();
+    iconEl.value = ''; labelEl.value = '';
+    renderCMClusterChips();
+    renderCMClusterSelect();
+    switchCMCluster(key);
+    renderClusterLimitRows();
+    await saveClustersToDb();
+    await saveCourseCatalog();
+  }
+
+  async function deleteCMCluster(key) {
+    if (!adminMode) return;
+    const hasCourses = ['ms1','ms3','phd'].some(prog => ((COURSE_CATALOG[prog] || {})[key] || []).length > 0);
+    const label = CLUSTER_LABEL[key] || key;
+    const msg = hasCourses
+      ? `"${label}" still contains courses. Delete this cluster and all of its courses? This cannot be undone.`
+      : `Delete the "${label}" cluster?`;
+    if (!confirm(msg)) return;
+    CLUSTERS = CLUSTERS.filter(c => c.key !== key);
+    ['ms1','ms3','phd'].forEach(prog => { if (COURSE_CATALOG[prog]) delete COURSE_CATALOG[prog][key]; });
+    rebuildClusterMeta();
+    rebuildCourseClusterMap();
+    if (cmState.cluster === key) cmState.cluster = CLUSTER_ORDER[0] || 'compulsory';
+    renderCMClusterChips();
+    renderCMClusterSelect();
+    renderCMList();
+    renderClusterLimitRows();
+    renderAllCourseSelects();
+    await saveClustersToDb();
+    await saveCourseCatalog();
+  }
+
+  function renderClusterLimitRows() {
+    const wrap = document.getElementById('cluster-limit-rows');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (CLUSTERS.length === 0) {
+      wrap.innerHTML = '<div style="font-size:12px;color:var(--text-lt);font-style:italic;padding:6px 0;">No clusters defined yet — add one via "Manage Courses".</div>';
+      return;
+    }
+    CLUSTERS.forEach(c => {
+      const div = document.createElement('div');
+      div.style.cssText = 'background:#fff;border:1px solid var(--border);padding:8px 12px;margin-bottom:6px;';
+      div.innerHTML = `
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--text-lt);text-transform:uppercase;margin-bottom:6px;">${c.icon ? escapeHtml(c.icon) + ' ' : ''}${escapeHtml(c.label)}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('${c.key}','ms1',-1)">−</button><input type="number" id="cl-${c.key}-ms1" class="cluster-limit-input" value="1" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('${c.key}','ms1',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('${c.key}','ms3',-1)">−</button><input type="number" id="cl-${c.key}-ms3" class="cluster-limit-input" value="2" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('${c.key}','ms3',+1)">+</button></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div class="stepper"><button onclick="stepCluster('${c.key}','phd',-1)">−</button><input type="number" id="cl-${c.key}-phd" class="cluster-limit-input" value="3" min="0" max="20" oninput="onStepperChange()"/><button onclick="stepCluster('${c.key}','phd',+1)">+</button></div>
+          </div>
+        </div>`;
+      wrap.appendChild(div);
+    });
+    syncModalInputs();
+  }
+
   /* ── COURSE CATALOG (admin-editable course lists per program/cluster) ── */
   const PROGRAM_SELECT_IDS = { ms1: 'sel-ms1', ms3: 'sel-ms3', phd: 'sel-phd' };
   const PROGRAM_LABEL      = { ms1: 'MSEE Sem 1', ms3: 'MSEE Sem 3', phd: 'PhD EE Sem 1' };
@@ -2024,10 +2172,13 @@
           COURSE_CATALOG = merged;
         }
       }
+      ensureCatalogHasClusters();
       rebuildCourseClusterMap();
       renderAllCourseSelects();
+      if (document.getElementById('course-manager-modal').classList.contains('open')) renderCMList();
     }, err => {
       console.warn('Could not load course catalog:', err.message);
+      ensureCatalogHasClusters();
       renderAllCourseSelects();
     });
   }
@@ -2266,6 +2417,8 @@
   function openCourseManagerModal() {
     if (!adminMode) return;
     cmState.editingIndex = null;
+    renderCMClusterChips();
+    renderCMClusterSelect();
     switchCMProgram('ms1');
     document.getElementById('cm-save-status').textContent = '';
     document.getElementById('course-manager-modal').classList.add('open');
@@ -3031,7 +3184,11 @@
     if (el) el.innerHTML = DEFAULT_POPUP_CONTENT;
   }
 
-  window.addEventListener('load', () => { renderAllCourseSelects(); loadRestrictions(); loadCourseCatalog(); loadFromStorage(); });
+  renderClusterLimitRows();
+  renderCMClusterSelect();
+  renderCMClusterChips();
+
+  window.addEventListener('load', () => { renderAllCourseSelects(); loadRestrictions(); loadClusters(); loadCourseCatalog(); loadFromStorage(); });
 </script>
 </body>
 </html>
