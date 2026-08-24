@@ -505,6 +505,50 @@
         </table>
       </div>
 
+      <!-- COURSE-WISE SELECTION REPORT (admin only — how many students per course) -->
+      <div id="course-report-section" style="display:none;">
+        <div class="divider-title">
+          <div class="dt-icon">5</div>
+          <div class="dt-text">Course-wise Selection Report — Fall 2026</div>
+          <div class="dt-rule"></div>
+        </div>
+
+        <div class="list-toolbar">
+          <div class="sw" style="min-width:190px;">
+            <select id="cr-program" onchange="renderCourseReport()">
+              <option value="">All Semesters</option>
+              <option value="ms1">MSEE Semester 1</option>
+              <option value="ms3">MSEE Semester 3</option>
+              <option value="phd">PhD EE Semester 1</option>
+            </select>
+          </div>
+          <div class="sw" style="min-width:170px;">
+            <select id="cr-type" onchange="renderCourseReport()">
+              <option value="">Compulsory + Elective</option>
+              <option value="comp">Compulsory only</option>
+              <option value="elec">Elective only</option>
+            </select>
+          </div>
+          <button class="btn-export" onclick="exportCourseReportCSV()">Export to Excel</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Course</th>
+                <th>Semester(s)</th>
+                <th>Compulsory Picks</th>
+                <th>Elective Picks</th>
+                <th>Total Students</th>
+              </tr>
+            </thead>
+            <tbody id="course-report-body"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -847,6 +891,7 @@
       snapshot.forEach(doc => allSelections.push({ id: doc.id, ...doc.data() }));
       renderSelectionsStats();
       renderSelectionsTable();
+      renderCourseReport();
     }, err => {
       const body = document.getElementById('selections-table-body');
       if (body) body.innerHTML = `<tr class="empty-row"><td colspan="7">Could not load submissions — ${escapeHtml(err.message)}</td></tr>`;
@@ -939,14 +984,108 @@
     showAlert('success','✔', `Exported ${allSelections.length} record(s) to Excel-compatible CSV.`);
   }
 
+  /* ── COURSE-WISE SELECTION REPORT ── */
+  function computeCourseStats(progFilter) {
+    // course name -> { comp: n, elec: n, programs: Set }
+    const map = new Map();
+    const bump = (course, field, program) => {
+      if (!course) return;
+      if (!map.has(course)) map.set(course, { comp: 0, elec: 0, programs: new Set() });
+      const entry = map.get(course);
+      entry[field]++;
+      entry.programs.add(program);
+    };
+    allSelections.forEach(s => {
+      if (progFilter && s.program !== progFilter) return;
+      (s.compulsory || []).forEach(c => bump(c, 'comp', s.program));
+      (s.electives  || []).forEach(c => bump(c, 'elec', s.program));
+    });
+    return Array.from(map.entries())
+      .map(([course, v]) => ({
+        course,
+        comp: v.comp,
+        elec: v.elec,
+        total: v.comp + v.elec,
+        programs: Array.from(v.programs).map(p => PROGRAM_LABEL[p] || p).sort()
+      }))
+      .sort((a, b) => b.total - a.total || a.course.localeCompare(b.course));
+  }
+
+  function renderCourseReport() {
+    const body = document.getElementById('course-report-body');
+    if (!body) return;
+    const progFilter = document.getElementById('cr-program').value;
+    const typeFilter = document.getElementById('cr-type').value;
+    let rows = computeCourseStats(progFilter);
+
+    if (typeFilter === 'comp') rows = rows.filter(r => r.comp > 0).map(r => ({ ...r, elec: 0, total: r.comp }));
+    if (typeFilter === 'elec') rows = rows.filter(r => r.elec > 0).map(r => ({ ...r, comp: 0, total: r.elec }));
+    if (typeFilter !== 'comp' && typeFilter !== 'elec') rows = rows.filter(r => r.total > 0);
+
+    if (typeFilter === 'comp' || typeFilter === 'elec') {
+      rows = rows.sort((a, b) => b.total - a.total || a.course.localeCompare(b.course));
+    }
+
+    if (rows.length === 0) {
+      body.innerHTML = `<tr class="empty-row"><td colspan="6">No course selections to report yet.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td>${String(i + 1).padStart(2, '0')}</td>
+        <td>${escapeHtml(r.course)}</td>
+        <td>${r.programs.map(p => `<span class="tc-prog" style="border-color:var(--border);color:var(--text-lt);">${escapeHtml(p)}</span>`).join(' ')}</td>
+        <td>${r.comp}</td>
+        <td>${r.elec}</td>
+        <td style="font-family:'Playfair Display',serif;font-weight:700;color:var(--navy);">${r.total}</td>
+      </tr>`).join('');
+  }
+
+  function exportCourseReportCSV() {
+    const progFilter = document.getElementById('cr-program').value;
+    const typeFilter = document.getElementById('cr-type').value;
+    let rows = computeCourseStats(progFilter);
+    if (typeFilter === 'comp') rows = rows.filter(r => r.comp > 0).map(r => ({ ...r, elec: 0, total: r.comp }));
+    else if (typeFilter === 'elec') rows = rows.filter(r => r.elec > 0).map(r => ({ ...r, comp: 0, total: r.elec }));
+    else rows = rows.filter(r => r.total > 0);
+
+    if (rows.length === 0) {
+      showAlert('danger', '⚠', 'No course data to export.');
+      return;
+    }
+    const headers = ['#', 'Course', 'Semester(s)', 'Compulsory Picks', 'Elective Picks', 'Total Students'];
+    const csvRows = rows.map((r, i) => [
+      String(i + 1).padStart(2, '0'), r.course, r.programs.join(' | '), r.comp, r.elec, r.total
+    ]);
+    const escape = v => `"${String(v).replace(/"/g, '""')}"`;
+    const csvLines = [headers.map(escape).join(','), ...csvRows.map(r => r.map(escape).join(','))];
+    const csvContent = '\uFEFF' + csvLines.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `Course_Selection_Report_${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showAlert('success', '✔', `Exported ${rows.length} course(s) to Excel-compatible CSV.`);
+  }
+
   /* ── ADMIN LOGIN ── */
-  // Secret access: press Ctrl+Shift+A (or Cmd+Shift+A on Mac) anywhere on the page
-  // to open the admin login modal — there is no visible "Admin Login" button.
+  // Secret access #1: press Ctrl+Shift+A (or Cmd+Shift+A on Mac) anywhere on the page
+  // Secret access #2: double-tap/double-click the "Student Course Selection" title
+  // — there is no visible "Admin Login" button.
   document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
       e.preventDefault();
       if (!adminMode) openAdminLoginModal();
     }
+  });
+  document.querySelector('header h1').addEventListener('dblclick', function() {
+    if (!adminMode) openAdminLoginModal();
   });
 
   function openAdminLoginModal() {
@@ -962,8 +1101,10 @@
     if (pw === ADMIN_PASSWORD) {
       adminMode = true;
       document.getElementById('admin-badge').classList.add('show');
+      document.getElementById('course-report-section').style.display = '';
       closeAdminLoginModal();
       renderSelectionsTable();
+      renderCourseReport();
     } else {
       const inp = document.getElementById('admin-pw-input');
       inp.classList.add('shake');
@@ -976,6 +1117,7 @@
   function logoutAdmin() {
     adminMode = false;
     document.getElementById('admin-badge').classList.remove('show');
+    document.getElementById('course-report-section').style.display = 'none';
     renderSelectionsTable();
   }
 
