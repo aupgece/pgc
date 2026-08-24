@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -460,49 +462,51 @@
       <div class="empty-state" id="empty-state">Please select your Class / Semester above to view the courses offered for Fall 2026.</div>
 
       <!-- ALL SUBMITTED SELECTIONS (visible to everyone) -->
-      <div class="divider-title">
-        <div class="dt-icon">4</div>
-        <div class="dt-text">All Submitted Course Selections — Fall 2026</div>
-        <div class="dt-rule"></div>
-        <div class="admin-bar">
-          <div class="admin-badge" id="admin-badge">
-            <span class="dot"></span> Admin Mode
-            <button onclick="logoutAdmin()">Logout</button>
+      <div id="submitted-selections-section">
+        <div class="divider-title">
+          <div class="dt-icon">4</div>
+          <div class="dt-text">All Submitted Course Selections — Fall 2026</div>
+          <div class="dt-rule"></div>
+          <div class="admin-bar">
+            <div class="admin-badge" id="admin-badge">
+              <span class="dot"></span> Admin Mode
+              <button onclick="logoutAdmin()">Logout</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="stats-row" id="stats-row"></div>
+        <div class="stats-row" id="stats-row"></div>
 
-      <div class="list-toolbar">
-        <div class="sw" style="min-width:190px;">
-          <select id="f-program" onchange="renderSelectionsTable()">
-            <option value="">All Semesters</option>
-            <option value="ms1">MSEE Semester 1</option>
-            <option value="ms3">MSEE Semester 3</option>
-            <option value="phd">PhD EE Semester 1</option>
-          </select>
+        <div class="list-toolbar">
+          <div class="sw" style="min-width:190px;">
+            <select id="f-program" onchange="renderSelectionsTable()">
+              <option value="">All Semesters</option>
+              <option value="ms1">MSEE Semester 1</option>
+              <option value="ms3">MSEE Semester 3</option>
+              <option value="phd">PhD EE Semester 1</option>
+            </select>
+          </div>
+          <input type="text" id="f-search" placeholder="Search by name or reg. no…" oninput="renderSelectionsTable()"/>
+          <button class="btn-export" id="export-selections-btn" style="display:none;" onclick="exportSelectionsCSV()">Export to Excel</button>
         </div>
-        <input type="text" id="f-search" placeholder="Search by name or reg. no…" oninput="renderSelectionsTable()"/>
-        <button class="btn-export" onclick="exportSelectionsCSV()">Export to Excel</button>
-      </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Student Name</th>
-              <th>Reg. No.</th>
-              <th>Semester</th>
-              <th>Compulsory Course(s)</th>
-              <th>Elective Course(s)</th>
-              <th>Submitted</th>
-              <th id="th-actions" style="display:none;"></th>
-            </tr>
-          </thead>
-          <tbody id="selections-table-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Student Name</th>
+                <th>Reg. No.</th>
+                <th>Semester</th>
+                <th>Compulsory Course(s)</th>
+                <th>Elective Course(s)</th>
+                <th>Submitted</th>
+                <th id="th-actions" style="display:none;"></th>
+              </tr>
+            </thead>
+            <tbody id="selections-table-body"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- COURSE-WISE SELECTION REPORT (admin only — how many students per course) -->
@@ -530,6 +534,7 @@
             </select>
           </div>
           <button class="btn-export" onclick="exportCourseReportCSV()">Export to Excel</button>
+          <button class="btn-export" onclick="exportCourseReportPDF()">Export to PDF</button>
         </div>
 
         <div class="table-wrap">
@@ -918,6 +923,8 @@
     const thActions = document.getElementById('th-actions');
     thActions.style.display = adminMode ? '' : 'none';
     thActions.textContent = adminMode ? 'Admin' : '';
+    const exportBtn = document.getElementById('export-selections-btn');
+    if (exportBtn) exportBtn.style.display = adminMode ? '' : 'none';
 
     let rows = allSelections;
     if (progFilter) rows = rows.filter(s => s.program === progFilter);
@@ -954,6 +961,7 @@
   }
 
   function exportSelectionsCSV() {
+    if (!adminMode) return; // export is admin-only
     if (allSelections.length === 0) {
       showAlert('danger','⚠','No submissions to export.');
       return;
@@ -1072,6 +1080,71 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showAlert('success', '✔', `Exported ${rows.length} course(s) to Excel-compatible CSV.`);
+  }
+
+  function exportCourseReportPDF() {
+    if (!adminMode) return; // report + export are admin-only
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      showAlert('danger', '⚠', 'PDF library failed to load — check your internet connection and try again.');
+      return;
+    }
+    const progFilter = document.getElementById('cr-program').value;
+    const typeFilter = document.getElementById('cr-type').value;
+    let rows = computeCourseStats(progFilter);
+    if (typeFilter === 'comp') rows = rows.filter(r => r.comp > 0).map(r => ({ ...r, elec: 0, total: r.comp }));
+    else if (typeFilter === 'elec') rows = rows.filter(r => r.elec > 0).map(r => ({ ...r, comp: 0, total: r.elec }));
+    else rows = rows.filter(r => r.total > 0);
+
+    if (rows.length === 0) {
+      showAlert('danger', '⚠', 'No course data to export.');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    const progLabel = progFilter ? (PROGRAM_LABEL[progFilter] || progFilter) : 'All Semesters';
+    const typeLabel = typeFilter === 'comp' ? 'Compulsory only' : typeFilter === 'elec' ? 'Elective only' : 'Compulsory + Elective';
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(150, 120, 40);
+    doc.text('AIR UNIVERSITY ISLAMABAD', 40, 36);
+    doc.setFontSize(16);
+    doc.setTextColor(13, 27, 62);
+    doc.text('Course-wise Selection Report — Fall 2026', 40, 56);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(90, 80, 64);
+    doc.text(`Semester: ${progLabel}    |    Scope: ${typeLabel}    |    Generated: ${dateStr}`, 40, 72);
+    doc.setDrawColor(201, 168, 76);
+    doc.setLineWidth(1.2);
+    doc.line(40, 80, pageWidth - 40, 80);
+
+    const head = [['#', 'Course', 'Semester(s)', 'Compulsory Picks', 'Elective Picks', 'Total Students']];
+    const body = rows.map((r, i) => [
+      String(i + 1).padStart(2, '0'), r.course, r.programs.join(' | '), r.comp, r.elec, r.total
+    ]);
+
+    doc.autoTable({
+      head, body,
+      startY: 92,
+      theme: 'grid',
+      margin: { left: 40, right: 40 },
+      styles: { font: 'helvetica', fontSize: 9.5, cellPadding: 6, lineColor: [200, 191, 168], lineWidth: 0.5 },
+      headStyles: { fillColor: [13, 27, 62], textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 240, 232] },
+      columnStyles: { 0: { cellWidth: 30 }, 3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'center', fontStyle: 'bold' } }
+    });
+
+    doc.setFontSize(8);
+    doc.setTextColor(140, 130, 110);
+    doc.text('CONFIDENTIAL — Administrative use only. Not for distribution to students.', 40, doc.internal.pageSize.getHeight() - 20);
+
+    const date = new Date().toISOString().slice(0, 10);
+    doc.save(`Course_Selection_Report_${date}.pdf`);
+    showAlert('success', '✔', `Exported ${rows.length} course(s) to PDF.`);
   }
 
   /* ── ADMIN LOGIN ── */
