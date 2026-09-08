@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Course Timetable Builder — Fall 2026 | Air University Islamabad</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ivory:     #f0ebe0;
+    --cream:     #f5f0e8;
+    --navy:      #0d1b3e;
+    --navy-lt:   #1c2e6b;
+    --forest:    #1a4230;
+    --gold:      #c9a84c;
+    --gold-lt:   #e2c06a;
+    --gold-dk:   #a07830;
+    --crimson:   #8b1a1a;
+    --border:    #c8bfa8;
+    --border-dk: #a8997c;
+    --text:      #0d0d0d;
+    --text-lt:   #5a5040;
+    --page-bg:   #e6e8f0;
+  }
+
+  body {
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 16px;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,168,76,.06) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 80% at 100% 100%, rgba(26,39,68,.08) 0%, transparent 60%),
+      linear-gradient(175deg, #e6e8f0 0%, #dcdfe9 50%, #d8dbe6 100%);
+  }
+  .top-rule {
+    height: 5px;
+    background: linear-gradient(90deg, var(--gold-dk) 0%, var(--gold) 40%, var(--gold-lt) 70%, var(--gold) 100%);
+    box-shadow: 0 2px 12px rgba(201,168,76,.4);
+  }
+  .wrapper { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 0 24px 80px; }
+
+  .content-card {
+    background: var(--ivory);
+    border: 1px solid rgba(201,168,76,.25);
+    border-top: none;
+    box-shadow: 0 0 0 1px rgba(201,168,76,.1), 0 8px 40px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+    padding: 0 0 48px;
+    position: relative;
+  }
+  .content-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold-dk), var(--gold), var(--gold-lt), var(--gold));
+  }
+
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 36px 36px 26px; cursor: default; user-select: none; touch-action: manipulation;
+    background: linear-gradient(135deg, #0d1b3e 0%, #0f2050 60%, #0a1530 100%);
+    border-bottom: 2px solid var(--gold);
+    position: relative; overflow: hidden;
+  }
+  .badge-col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .admin-badge {
+    display: none; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; color: #fff;
+    background: var(--forest); padding: 5px 12px; border: 1px solid rgba(255,255,255,.25);
+    cursor: pointer;
+  }
+  .admin-badge.on { display: flex; }
+  .admin-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold-lt); }
+  .admin-hint {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-lt);
+    font-style: italic; margin: 8px 36px 0;
+  }
+  header::after {
+    content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .institution {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 400;
+    letter-spacing: .28em; text-transform: uppercase; color: var(--gold-lt);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+  }
+  .institution::before { content: ''; display: inline-block; width: 28px; height: 1px; background: var(--gold); }
+  header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(24px, 3.6vw, 38px); font-weight: 900; line-height: 1.05; color: #fff; letter-spacing: -.01em;
+  }
+  header h1 em { font-style: italic; color: var(--gold-lt); }
+  .header-sub {
+    font-family: 'EB Garamond', serif; font-size: 14px; color: rgba(240,230,200,.65);
+    margin-top: 6px; font-style: italic; letter-spacing: .02em;
+  }
+  .ver-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--gold-lt);
+    background: rgba(255,255,255,.06); padding: 6px 14px; border: 1px solid rgba(201,168,76,.45);
+  }
+
+  .sync-bar {
+    display: flex; align-items: center; gap: 10px; background: var(--cream);
+    border: 1px solid var(--border); border-left: 3px solid var(--navy);
+    padding: 9px 16px; margin: 26px 36px 0; font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; color: var(--text-lt); letter-spacing: .02em;
+  }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--border-dk); }
+  .sync-dot.ok { background: var(--forest); }
+  .sync-dot.error { background: var(--crimson); }
+
+  .body-inner { padding: 26px 36px 0; }
+
+  .step-head { display: flex; align-items: center; gap: 12px; margin: 30px 0 16px; }
+  .step-num {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-size: 15px; color: #fff;
+    background: var(--navy); width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--navy); }
+  .step-rule { flex: 1; height: 1px; background: var(--border); }
+
+  .stats-row { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card {
+    flex: 1; min-width: 130px; background: var(--cream); border: 1px solid var(--border);
+    border-top: 3px solid var(--navy); padding: 12px 14px;
+  }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; color: var(--navy); }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-lt); margin-top: 4px; }
+
+  /* ── builder form ── */
+  .field-row { display: grid; grid-template-columns: 1.6fr 1.1fr 1fr 1fr 1fr auto; gap: 14px; align-items: end; margin-bottom: 10px; }
+  @media (max-width: 1000px) { .field-row { grid-template-columns: 1fr 1fr; } }
+  .field label {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--text-lt); margin-bottom: 7px;
+  }
+  input[type=text] {
+    width: 100%; background: #fff; border: 1px solid var(--border); color: var(--text);
+    font-family: 'EB Garamond', serif; font-size: 15px; padding: 11px 14px; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input[type=text]:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26,39,68,.08); }
+  .sw { position: relative; }
+  .sw::after {
+    content: '▾'; position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+    pointer-events: none; font-size: 12px; color: var(--text-lt);
+  }
+  select {
+    width: 100%; background: #fff; border: 1px solid var(--border); color: var(--text);
+    font-family: 'EB Garamond', serif; font-size: 15px; padding: 11px 36px 11px 14px;
+    appearance: none; cursor: pointer; outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  select:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26,39,68,.08); }
+
+  .btn {
+    background: var(--navy); color: var(--ivory); border: none;
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 14px;
+    letter-spacing: .04em; padding: 12px 26px; cursor: pointer; transition: background .2s, transform .1s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--navy-lt); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { background: var(--border-dk); cursor: not-allowed; transform: none; }
+
+  .form-error { color: var(--crimson); font-size: 12.5px; margin: 6px 0 4px; min-height: 16px; }
+
+  /* ── clash summary ── */
+  .clash-panel {
+    background: var(--cream); border: 1px solid var(--border); border-left: 3px solid var(--gold-dk);
+    padding: 16px 18px; margin-bottom: 22px;
+  }
+  .clash-panel .cp-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--navy); margin-bottom: 10px;
+  }
+  .clash-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 14px; padding: 7px 0; border-bottom: 1px dashed var(--border);
+  }
+  .clash-row:last-child { border-bottom: none; }
+  .clash-row .cr-pair { color: var(--text); }
+  .clash-row .cr-pair b { color: var(--crimson); }
+  .clash-row .cr-count {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-lt);
+    white-space: nowrap;
+  }
+  .clash-empty { font-size: 13px; color: var(--text-lt); font-style: italic; }
+
+  /* ── timetable — laid out like the Word class-schedule table ── */
+  .grid-wrap { background: #fff; margin-bottom: 22px; overflow-x: auto; }
+  .tt-table {
+    width: 100%; min-width: 720px; border-collapse: collapse;
+    font-family: 'EB Garamond', Georgia, serif; font-size: 14.5px; color: var(--text);
+  }
+  .tt-table th {
+    background: var(--crimson); color: #fff; border: 1px solid #1a1a1a;
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 15px;
+    text-align: left; padding: 11px 16px;
+  }
+  .tt-table th.col-day { text-align: center; }
+  .tt-table th.col-time { white-space: nowrap; }
+  .tt-table td {
+    border: 1px solid #999; padding: 10px 16px; vertical-align: middle;
+  }
+  .tt-table tr.day-even td { background: var(--cream); }
+  .tt-table tr.day-odd td { background: #fff; }
+  .tt-table td.day-cell {
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px;
+    color: var(--crimson); text-align: center; background: var(--cream) !important;
+    border-right: 2px solid var(--crimson);
+  }
+  .tt-table td.empty-row { font-style: italic; color: var(--text-lt); text-align: center; }
+  .tt-table td.time-cell {
+    font-family: 'EB Garamond', serif; font-style: italic; white-space: nowrap; text-align: center;
+  }
+  .tt-table td.course-cell { position: relative; padding-right: 34px; }
+  .tt-table .tb-course { font-weight: 600; }
+  .tt-table .tb-teacher { font-size: 12.5px; font-style: italic; color: var(--text-lt); margin-top: 2px; }
+  .tt-table .tb-warn { font-size: 11.5px; margin-top: 4px; color: var(--crimson); font-style: italic; }
+  .tt-table tr.clash-row-tt td:not(.day-cell) { background: rgba(139,26,26,.07); }
+  .tt-table .tb-remove {
+    position: absolute; top: 8px; right: 10px; background: none; border: none; color: var(--text-lt);
+    font-size: 13px; cursor: pointer; line-height: 1; padding: 2px 4px;
+  }
+  .tt-table .tb-remove:hover { color: var(--crimson); }
+
+  /* ── unscheduled chips ── */
+
+  .chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .chip {
+    background: #fff; border: 1px solid var(--border-dk); color: var(--text);
+    font-size: 13px; padding: 7px 12px; cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .chip:hover { border-color: var(--navy); background: rgba(26,39,68,.04); }
+  .chip-empty { font-size: 13px; color: var(--text-lt); font-style: italic; }
+  .chip-holder { display: inline-flex; align-items: stretch; }
+  .chip-holder .chip { border-right: none; }
+  .chip-del {
+    background: #fff; border: 1px solid var(--border-dk); border-left: none; color: var(--text-lt);
+    font-size: 11px; padding: 7px 10px; cursor: pointer; transition: color .15s, background .15s;
+  }
+  .chip-del:hover { color: var(--crimson); background: rgba(139,26,26,.06); }
+  .chip-ghost { color: var(--text-lt); text-decoration: line-through; background: var(--cream); }
+  .chip-restore { color: var(--forest); }
+  .chip-restore:hover { color: var(--forest); background: rgba(26,66,48,.08); }
+  .dismissed-panel {
+    display: none; background: var(--cream); border: 1px solid var(--border); border-left: 3px solid var(--forest);
+    padding: 14px 16px; margin: -10px 0 22px;
+  }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-lt); font-style: italic; }
+
+  /* ── modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100; background: rgba(13,27,62,.55);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--ivory); width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
+    border: 1px solid rgba(201,168,76,.35); box-shadow: 0 20px 60px rgba(0,0,0,.5); position: relative;
+  }
+  .modal-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--crimson), var(--gold), var(--crimson));
+  }
+  .modal-head { padding: 22px 26px 16px; background: var(--crimson); color: #fff; }
+  .modal-head h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; }
+  .modal-body { padding: 22px 26px; }
+  .modal-body p { font-size: 14.5px; line-height: 1.6; margin-bottom: 10px; }
+  .modal-clash-item {
+    background: var(--cream); border: 1px solid var(--border); border-left: 3px solid var(--crimson);
+    padding: 10px 14px; margin-bottom: 10px; font-size: 13.5px;
+  }
+  .modal-clash-item b { color: var(--navy); }
+  .modal-clash-item .mc-students { font-size: 12px; color: var(--text-lt); margin-top: 4px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .modal-actions .btn-cancel {
+    background: none; border: 1px solid var(--border-dk); color: var(--text-lt);
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 13px; padding: 10px 20px; cursor: pointer;
+  }
+  .modal-actions .btn-force {
+    background: var(--crimson); color: #fff; border: none;
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 13px; padding: 10px 20px; cursor: pointer;
+  }
+  .modal-actions .btn-force:hover { background: #a52121; }
+</style>
+</head>
+<body>
+<div class="top-rule"></div>
+<div class="wrapper">
+  <div class="content-card">
+    <header id="app-header" ondblclick="onHeaderDoubleTap()" title="Double-tap/double-click for admin access">
+      <div>
+        <div class="institution">Air University Islamabad</div>
+        <h1>Course <em>Timetable</em> Builder</h1>
+        <div class="header-sub">Postgraduate Program — Department of Electrical Engineering</div>
+      </div>
+      <div class="badge-col">
+        <div class="ver-badge">Fall 2026</div>
+        <div class="admin-badge" id="admin-badge" onclick="event.stopPropagation(); onLogoutAdmin();">
+          <span class="dot"></span><span>Admin — tap to exit</span>
+        </div>
+      </div>
+    </header>
+    <div class="admin-hint" id="admin-hint">Double-tap the header above for admin access.</div>
+
+    <div class="sync-bar">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-text">Connecting to database…</span>
+    </div>
+
+    <div class="body-inner">
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-students">0</div>
+          <div class="stat-label">Students on record</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-courses">0</div>
+          <div class="stat-label">Distinct courses</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-pairs">0</div>
+          <div class="stat-label">Course pairs sharing students</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-scheduled">0</div>
+          <div class="stat-label">Sessions scheduled</div>
+        </div>
+      </div>
+
+      <!-- STEP I — CLASH REFERENCE -->
+      <div class="step-head">
+        <div class="step-num">1</div>
+        <div class="step-title">Courses Selected Together</div>
+        <div class="step-rule"></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--text-lt);margin-bottom:12px;">
+        Any two courses below share at least one student — scheduling them in the same day/time slot will clash for that student. E.g. EE631 (Stochastic Processes) and EE651 (Linear Systems) are both compulsory for MSEE Sem 1, so they can never share a slot.
+      </p>
+      <div class="clash-panel">
+        <div class="cp-label">Overlapping enrolments</div>
+        <div id="clash-list"><div class="clash-empty">Loading selections…</div></div>
+      </div>
+
+      <!-- STEP II — BUILD (admin only) -->
+      <div id="admin-add-section" style="display:none;">
+        <div class="step-head">
+          <div class="step-num">2</div>
+          <div class="step-title">Place a Course</div>
+          <div class="step-rule"></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="f-course">Course</label>
+            <input type="text" id="f-course" list="course-datalist" placeholder="Type or pick a course"/>
+            <datalist id="course-datalist"></datalist>
+          </div>
+          <div class="field">
+            <label for="f-teacher">Teacher</label>
+            <input type="text" id="f-teacher" placeholder="Instructor name"/>
+          </div>
+          <div class="field">
+            <label for="f-day">Day</label>
+            <div class="sw">
+              <select id="f-day">
+                <option value="Mon">Monday</option>
+                <option value="Tue">Tuesday</option>
+                <option value="Wed">Wednesday</option>
+                <option value="Thu">Thursday</option>
+                <option value="Fri">Friday</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-start">Start time</label>
+            <div class="sw">
+              <select id="f-start">
+                <option value="960">4:00 PM</option>
+                <option value="990">4:30 PM</option>
+                <option value="1020">5:00 PM</option>
+                <option value="1050">5:30 PM</option>
+                <option value="1080">6:00 PM</option>
+                <option value="1110">6:30 PM</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-dur">Duration</label>
+            <div class="sw">
+              <select id="f-dur">
+                <option value="60">1 hr</option>
+                <option value="90" selected>1.5 hr</option>
+                <option value="120">2 hr</option>
+                <option value="150">2.5 hr</option>
+                <option value="180">3 hr</option>
+                <option value="30">30 min</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn" onclick="onAddClick()">Add to Timetable</button>
+        </div>
+        <div class="form-error" id="form-error"></div>
+      </div>
+      <div class="chip-empty" id="admin-add-locked" style="margin:0 0 22px;">🔒 Admin access required to place or edit courses on the timetable.</div>
+
+      <!-- STEP III — UNSCHEDULED -->
+      <div class="step-head">
+        <div class="step-num">3</div>
+        <div class="step-title">Unscheduled Courses</div>
+        <div class="step-rule"></div>
+      </div>
+      <div class="chip-wrap" id="chip-wrap"><span class="chip-empty">Loading…</span></div>
+      <div class="dismissed-panel" id="dismissed-panel"></div>
+
+      <!-- STEP IV — TIMETABLE -->
+      <div class="step-head">
+        <div class="step-num">4</div>
+        <div class="step-title">Weekly Timetable — 4:00 PM to 7:00 PM</div>
+        <div class="step-rule"></div>
+      </div>
+      <div class="grid-wrap">
+        <table class="tt-table">
+          <thead>
+            <tr>
+              <th class="col-day">Day</th>
+              <th class="col-course">Course</th>
+              <th class="col-time">Time</th>
+            </tr>
+          </thead>
+          <tbody id="tt-grid"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="grid-empty" style="display:none;">No sessions placed yet. Add a course above to begin building the timetable.</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CLASH WARNING MODAL -->
+<div class="modal-overlay" id="clash-modal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>⚠ Scheduling Clash Detected</h3></div>
+    <div class="modal-body">
+      <p>Placing <b id="cm-course"></b> on <b id="cm-when"></b> clashes with the following already-scheduled course(s), because the same student(s) selected both:</p>
+      <div id="cm-list"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeClashModal()">Cancel</button>
+        <button class="btn-force" onclick="forceAddPending()">Schedule anyway</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── FIREBASE (same project as Student Course Selection) ── */
+  const firebaseConfig = {
+    apiKey: "AIzaSyBGoySuXhML5IU_-tbZQp4c4O_ancQfABQ",
+    authDomain: "aupgc-8b57b.firebaseapp.com",
+    projectId: "aupgc-8b57b",
+    storageBucket: "aupgc-8b57b.firebasestorage.app",
+    messagingSenderId: "109588130698",
+    appId: "1:109588130698:web:ce30fa64877b3c1f18f673",
+    measurementId: "G-RXKD8X2GF2"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const SELECT_COL    = 'student-course-selections-v1'; // same collection the selection page writes to
+  const TIMETABLE_COL = 'course-timetable-v1';           // this page's own collection
+  const DISMISS_COL   = 'dismissed-unscheduled-courses-v1'; // courses an admin has deleted from the unscheduled list
+
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri'];
+  const DAY_LABEL = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday' };
+  const START_MIN = 16 * 60; // 4:00 PM
+  const END_MIN   = 19 * 60; // 7:00 PM
+  const TOTAL_MIN = END_MIN - START_MIN; // 180
+
+  let selections = [];          // raw docs from SELECT_COL
+  let courseStudents = {};      // course -> Set of "Name (Reg)"
+  let allCourses = [];          // sorted course list
+  let sessions = [];            // placed sessions from TIMETABLE_COL: {id, course, day, start, end}
+  let pendingAdd = null;        // holds {course, day, start, end} awaiting modal confirmation
+  let dismissed = [];           // docs from DISMISS_COL: {id, course} — unscheduled courses an admin deleted
+
+  /* ── ADMIN GATE ── */
+  const ADMIN_PASSWORD = 'tt2026';
+  let isAdmin = sessionStorage.getItem('tt-admin') === '1';
+
+  function onHeaderDoubleTap() {
+    if (isAdmin) return; // already in — use the badge to exit
+    const pass = prompt('Enter admin password:');
+    if (pass === null) return;
+    if (pass === ADMIN_PASSWORD) {
+      isAdmin = true;
+      sessionStorage.setItem('tt-admin', '1');
+      applyAdminUI();
+    } else {
+      alert('Incorrect password.');
+    }
+  }
+
+  function onLogoutAdmin() {
+    if (!confirm('Exit admin mode?')) return;
+    isAdmin = false;
+    sessionStorage.removeItem('tt-admin');
+    applyAdminUI();
+  }
+
+  function applyAdminUI() {
+    document.getElementById('admin-badge').classList.toggle('on', isAdmin);
+    document.getElementById('admin-hint').style.display = isAdmin ? 'none' : 'block';
+    document.getElementById('admin-add-section').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('admin-add-locked').style.display = isAdmin ? 'none' : 'block';
+    renderGrid();
+    renderChips();
+  }
+
+  function minutesLabel(m) {
+    let h = Math.floor(m / 60), mm = m % 60;
+    const ap = h >= 12 ? 'PM' : 'AM';
+    let h12 = h % 12; if (h12 === 0) h12 = 12;
+    return `${h12}:${mm.toString().padStart(2,'0')} ${ap}`;
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* ── LOAD STUDENT SELECTIONS ── */
+  function loadSelections() {
+    db.collection(SELECT_COL).onSnapshot(snap => {
+      selections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      buildCourseStudentMap();
+      renderClashSummary();
+      renderCourseDatalist();
+      renderChips();
+      renderGrid();
+      setSyncOk();
+    }, err => {
+      setSyncError('Could not load student selections — ' + err.message);
+    });
+  }
+
+  function buildCourseStudentMap() {
+    courseStudents = {};
+    selections.forEach(s => {
+      const courses = [ ...(s.compulsory || []), ...(s.electives || []) ];
+      const who = `${s.name || 'Unnamed'} (${s.regNo || '—'})`;
+      courses.forEach(c => {
+        if (!courseStudents[c]) courseStudents[c] = new Set();
+        courseStudents[c].add(who);
+      });
+    });
+    allCourses = Object.keys(courseStudents).sort();
+    document.getElementById('stat-students').textContent = selections.length;
+    document.getElementById('stat-courses').textContent = allCourses.length;
+  }
+
+  /* ── CLASH REFERENCE PANEL (which course pairs share students) ── */
+  function computeClashPairs() {
+    const pairs = [];
+    for (let i = 0; i < allCourses.length; i++) {
+      for (let j = i + 1; j < allCourses.length; j++) {
+        const a = allCourses[i], b = allCourses[j];
+        const shared = [...courseStudents[a]].filter(x => courseStudents[b].has(x));
+        if (shared.length) pairs.push({ a, b, shared });
+      }
+    }
+    pairs.sort((x, y) => y.shared.length - x.shared.length);
+    return pairs;
+  }
+
+  function renderClashSummary() {
+    const pairs = computeClashPairs();
+    document.getElementById('stat-pairs').textContent = pairs.length;
+    const box = document.getElementById('clash-list');
+    if (!pairs.length) {
+      box.innerHTML = '<div class="clash-empty">No overlapping enrolments found yet — nothing to warn about until selections come in.</div>';
+      return;
+    }
+    box.innerHTML = pairs.map(p => `
+      <div class="clash-row">
+        <div class="cr-pair"><b>${escapeHtml(p.a)}</b> &nbsp;↔&nbsp; <b>${escapeHtml(p.b)}</b></div>
+        <div class="cr-count">${p.shared.length} student${p.shared.length !== 1 ? 's' : ''}</div>
+      </div>`).join('');
+  }
+
+  function renderCourseDatalist() {
+    document.getElementById('course-datalist').innerHTML =
+      allCourses.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+  }
+
+  /* ── LOAD DISMISSED (unscheduled courses an admin has deleted from the list) ── */
+  function loadDismissed() {
+    db.collection(DISMISS_COL).onSnapshot(snap => {
+      dismissed = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderChips();
+    }, err => {
+      setSyncError('Could not load dismissed courses — ' + err.message);
+    });
+  }
+
+  function dismissCourse(course) {
+    if (!isAdmin) { alert('Admin access required.'); return; }
+    if (!confirm(`Delete "${course}" from the unscheduled courses list?`)) return;
+    if (dismissed.some(d => d.course === course)) return; // already dismissed
+    db.collection(DISMISS_COL).add({
+      course, dismissedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function restoreDismissed(id) {
+    if (!isAdmin) { alert('Admin access required.'); return; }
+    db.collection(DISMISS_COL).doc(id).delete();
+  }
+
+  /* ── LOAD / SAVE TIMETABLE ── */
+  function loadTimetable() {
+    db.collection(TIMETABLE_COL).onSnapshot(snap => {
+      sessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('stat-scheduled').textContent = sessions.length;
+      renderGrid();
+      renderChips();
+    }, err => {
+      setSyncError('Could not load timetable — ' + err.message);
+    });
+  }
+
+  /* ── CLASH CHECK: does placing (course, day, start, end) clash with existing sessions? ── */
+  function findClashesFor(course, day, start, end, excludeId) {
+    const mySet = courseStudents[course] || new Set();
+    const clashes = [];
+    sessions.forEach(s => {
+      if (excludeId && s.id === excludeId) return;
+      if (s.day !== day) return;
+      const overlaps = start < s.end && end > s.start;
+      if (!overlaps) return;
+      const otherSet = courseStudents[s.course] || new Set();
+      const shared = [...mySet].filter(x => otherSet.has(x));
+      if (shared.length) clashes.push({ session: s, shared });
+    });
+    return clashes;
+  }
+
+  function onAddClick() {
+    if (!isAdmin) { alert('Admin access required.'); return; }
+    const errEl = document.getElementById('form-error');
+    errEl.textContent = '';
+    const course = document.getElementById('f-course').value.trim();
+    const teacher = document.getElementById('f-teacher').value.trim();
+    const day = document.getElementById('f-day').value;
+    const start = parseInt(document.getElementById('f-start').value, 10);
+    const dur = parseInt(document.getElementById('f-dur').value, 10);
+    const end = start + dur;
+
+    if (!course) { errEl.textContent = 'Enter or select a course.'; return; }
+    if (end > END_MIN) { errEl.textContent = `That duration runs past 7:00 PM — choose an earlier start or shorter duration.`; return; }
+
+    const dupe = sessions.find(s => s.course === course && s.day === day && s.start === start && s.end === end);
+    if (dupe) { errEl.textContent = 'This exact session is already on the timetable.'; return; }
+
+    const clashes = findClashesFor(course, day, start, end);
+    if (clashes.length) {
+      pendingAdd = { course, teacher, day, start, end };
+      openClashModal(course, day, start, end, clashes);
+      return;
+    }
+    commitAdd(course, teacher, day, start, end);
+  }
+
+  function commitAdd(course, teacher, day, start, end) {
+    db.collection(TIMETABLE_COL).add({
+      course, teacher, day, start, end,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      document.getElementById('f-course').value = '';
+      document.getElementById('f-teacher').value = '';
+    }).catch(e => {
+      document.getElementById('form-error').textContent = 'Could not save — ' + e.message;
+    });
+  }
+
+  function openClashModal(course, day, start, end, clashes) {
+    document.getElementById('cm-course').textContent = course;
+    document.getElementById('cm-when').textContent = `${DAY_LABEL[day]}, ${minutesLabel(start)}–${minutesLabel(end)}`;
+    document.getElementById('cm-list').innerHTML = clashes.map(c => `
+      <div class="modal-clash-item">
+        <b>${escapeHtml(c.session.course)}</b> — ${DAY_LABEL[c.session.day]}, ${minutesLabel(c.session.start)}–${minutesLabel(c.session.end)}
+        <div class="mc-students">Shared: ${c.shared.map(escapeHtml).join(', ')}</div>
+      </div>`).join('');
+    document.getElementById('clash-modal').classList.add('open');
+  }
+
+  function closeClashModal() {
+    document.getElementById('clash-modal').classList.remove('open');
+    pendingAdd = null;
+  }
+
+  function forceAddPending() {
+    if (!isAdmin) { alert('Admin access required.'); closeClashModal(); return; }
+    if (!pendingAdd) return;
+    commitAdd(pendingAdd.course, pendingAdd.teacher, pendingAdd.day, pendingAdd.start, pendingAdd.end);
+    closeClashModal();
+  }
+
+  function removeSession(id) {
+    if (!isAdmin) { alert('Admin access required.'); return; }
+    if (!confirm('Remove this session from the timetable?')) return;
+    db.collection(TIMETABLE_COL).doc(id).delete();
+  }
+
+  /* ── UNSCHEDULED CHIPS ── */
+  function renderChips() {
+    const scheduledCourses = new Set(sessions.map(s => s.course));
+    const dismissedSet = new Set(dismissed.map(d => d.course));
+    const unscheduled = allCourses.filter(c => !scheduledCourses.has(c) && !dismissedSet.has(c));
+    const wrap = document.getElementById('chip-wrap');
+    if (!allCourses.length) { wrap.innerHTML = '<span class="chip-empty">No student selections found yet.</span>'; }
+    else if (!unscheduled.length) { wrap.innerHTML = '<span class="chip-empty">Every selected course has at least one session placed.</span>'; }
+    else {
+      wrap.innerHTML = unscheduled.map(c => `
+        <span class="chip-holder">
+          <button class="chip" onclick="document.getElementById('f-course').value='${c.replace(/'/g, "\\'")}'; document.getElementById('f-course').scrollIntoView({behavior:'smooth', block:'center'});">${escapeHtml(c)}</button>
+          ${isAdmin ? `<button class="chip-del" title="Delete this course from the unscheduled list" onclick="dismissCourse('${c.replace(/'/g, "\\'")}')">✕</button>` : ''}
+        </span>`).join('');
+    }
+    renderDismissedPanel();
+  }
+
+  function renderDismissedPanel() {
+    const panel = document.getElementById('dismissed-panel');
+    if (!panel) return;
+    if (!isAdmin || !dismissed.length) { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+    panel.style.display = 'block';
+    panel.innerHTML = `<div class="cp-label" style="margin-bottom:8px;">Deleted from unscheduled list (admin)</div>` +
+      dismissed.map(d => `
+        <span class="chip-holder">
+          <span class="chip chip-ghost">${escapeHtml(d.course)}</span>
+          <button class="chip-del chip-restore" title="Restore to unscheduled list" onclick="restoreDismissed('${d.id}')">↺</button>
+        </span>`).join('');
+  }
+
+  /* ── TABLE RENDER — day column merged across its sessions, like the Word schedule ── */
+  function renderGrid() {
+    const grid = document.getElementById('tt-grid');
+    document.getElementById('grid-empty').style.display = sessions.length ? 'none' : 'block';
+
+    let html = '';
+
+    DAYS.forEach((day, di) => {
+      const daySessions = sessions
+        .filter(s => s.day === day)
+        .sort((a, b) => a.start - b.start || a.end - b.end);
+
+      const shade = di % 2 === 0 ? 'day-even' : 'day-odd';
+
+      if (!daySessions.length) {
+        html += `
+          <tr class="${shade}">
+            <td class="day-cell">${DAY_LABEL[day]}</td>
+            <td class="empty-row" colspan="2">No sessions</td>
+          </tr>`;
+        return;
+      }
+
+      daySessions.forEach((s, idx) => {
+        const clashes = findClashesFor(s.course, s.day, s.start, s.end, s.id);
+        html += `<tr class="${shade}${clashes.length ? ' clash-row-tt' : ''}">`;
+        if (idx === 0) {
+          html += `<td class="day-cell" rowspan="${daySessions.length}">${DAY_LABEL[day]}</td>`;
+        }
+        html += `
+            <td class="course-cell" title="${escapeHtml(s.course)} · ${minutesLabel(s.start)}–${minutesLabel(s.end)}${clashes.length ? ' — Clashes with: ' + clashes.map(c => c.session.course).join(', ') : ''}">
+              ${isAdmin ? `<button class="tb-remove" onclick="removeSession('${s.id}')">✕</button>` : ''}
+              <span class="tb-course">${escapeHtml(s.course)}</span>
+              ${s.teacher ? `<div class="tb-teacher">${escapeHtml(s.teacher)}</div>` : ''}
+              ${clashes.length ? `<div class="tb-warn">⚠ clash: ${clashes.map(c => escapeHtml(c.session.course)).join(', ')}</div>` : ''}
+            </td>
+            <td class="time-cell">${minutesLabel(s.start)}–${minutesLabel(s.end)}</td>
+          </tr>`;
+      });
+    });
+
+    grid.innerHTML = html;
+  }
+
+  function setSyncOk() {
+    document.getElementById('sync-dot').className = 'sync-dot ok';
+    document.getElementById('sync-text').textContent = 'Connected — live student selections and timetable';
+  }
+  function setSyncError(msg) {
+    document.getElementById('sync-dot').className = 'sync-dot error';
+    document.getElementById('sync-text').textContent = msg;
+  }
+
+  window.addEventListener('load', () => {
+    applyAdminUI();
+    loadSelections();
+    loadTimetable();
+    loadDismissed();
+  });
+</script>
+</body>
+</html>
